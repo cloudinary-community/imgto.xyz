@@ -103,7 +103,27 @@ export function formatBytes(bytes: number, { type = 'kb', limit, fixed = 0, comm
  * getFileSize
  */
 
-export async function getFileSize(url: string) {
-  const data = await fetch(url).then(r => r.blob());
-  return data.size;
+export async function getFileBlob(url: string) {
+  return fetch(url).then(r => r.blob());
+}
+
+/**
+ * downloadBlob
+ */
+
+export function downloadBlob(blob: Blob, filename: string = 'file') {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  a.href = url;
+  a.download = filename;
+
+  function handleOnClick() {
+    setTimeout(() => URL.revokeObjectURL(url), 150);
+    removeEventListener('click', handleOnClick);
+  };
+
+  a.addEventListener('click', handleOnClick, false);
+
+  a.click();
 }
