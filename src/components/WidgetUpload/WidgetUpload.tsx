@@ -9,6 +9,9 @@ import Dropzone from '@/components/Dropzone';
 import ProgressBar from '@/components/ProgressBar';
 import Button from '@/components/Button';
 
+const MAX_IMAGES = 20;
+const MAX_SIZE = 10; // #MB
+
 const stateMap: { [key: string]: string } = {
   ready: 'Ready',
   uploading: 'Uploading',
@@ -44,9 +47,10 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const imageStates = images?.map(({ state }) => state);
   const uploadingCount = imageStates?.filter(state => state === 'uploading').length;
   const finishedCount = imageStates?.filter(state => state === 'finished').length;
-  const totalCount = images?.length;
+  const totalCount = Array.isArray(images) ? images.length : 0;
 
   const isUploadComplete = totalCount === finishedCount;
+  const isDisabled = !!totalCount && totalCount >= MAX_IMAGES;
 
   const totalSizeOriginal = images && addNumbers(images.map(({ size }) => size));
   const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ optimizedSize }) => optimizedSize || 0));
@@ -218,7 +222,13 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   return (
     <div className={cn('', className)}>
       <div className={`${uploadContainerClassName} mb-20`}>
-        <Dropzone className="min-h-0 self-start" onDrop={handleOnDrop} />
+        <Dropzone
+          className="min-h-0 self-start"
+          onDrop={handleOnDrop}
+          disabled={isDisabled}
+          maxSize={MAX_SIZE}
+          maxFiles={MAX_IMAGES}
+        />
         {Array.isArray(images) && (
           <section>
             <h2 className="flex justify-between mb-5">
