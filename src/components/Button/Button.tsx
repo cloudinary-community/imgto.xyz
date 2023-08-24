@@ -13,6 +13,7 @@ interface ButtonProps {
 
 const Button = ({ children, className = '',  onClick, size = 'sm', href, download }: ButtonProps) => {
 
+  const buttonClassName = 'inline-flex items-center justify-between gap-2 text-white hover:text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded font-black uppercase';
   let sizeClassName = 'text-sm py-2.5 px-6';
 
   if ( size === 'xs' ) {
@@ -24,7 +25,7 @@ const Button = ({ children, className = '',  onClick, size = 'sm', href, downloa
       <a
         href={href}
         onClick={onClick}
-        className={cn(`inline-flex items-center justify-between gap-2 text-white hover:text-white bg-blue-500 hover:bg-blue-400 active:bg-blue-600 rounded font-black uppercase ${sizeClassName}`, className)}
+        className={cn(`${buttonClassName} ${sizeClassName}`, className)}
         download={download}
       >
         { children }
@@ -33,7 +34,7 @@ const Button = ({ children, className = '',  onClick, size = 'sm', href, downloa
   }
 
   return (
-    <button onClick={onClick} className={cn(`inline-flex items-center justify-between gap-2 text-white bg-blue-500 hover:bg-blue-400 active:bg-blue-600 rounded font-black uppercase ${sizeClassName}`, className)}>
+    <button onClick={onClick} className={cn(`${buttonClassName} ${sizeClassName}`, className)}>
       { children }
     </button>
   )

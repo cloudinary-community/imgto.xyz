@@ -135,3 +135,11 @@ export function downloadUrl(url: string, filename: string = 'file') {
 
   a.click();
 }
+
+/**
+ * addNumbers
+ */
+
+export function addNumbers(numbers: Array<number>) {
+  return numbers.reduce((prev, curr) => prev + curr, 0);
+}

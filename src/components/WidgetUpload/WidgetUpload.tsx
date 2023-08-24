@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
 
-import { cn, formatBytes, getFileBlob, downloadBlob, downloadUrl } from '@/lib/util';
+import { cn, formatBytes, getFileBlob, downloadBlob, downloadUrl, addNumbers } from '@/lib/util';
 
 import Dropzone from '@/components/Dropzone';
 import ProgressBar from '@/components/ProgressBar';
@@ -36,10 +36,6 @@ interface Image {
   optimizedUrl?: string;
   optimizedSize?: number;
   optimizedData?: Blob;
-}
-
-function addNumbers(numbers: Array<number>) {
-  return numbers.reduce((prev, curr) => prev + curr, 0);
 }
 
 const WidgetUpload = ({ className }: WidgetUploadProps) => {

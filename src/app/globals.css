@@ -47,7 +47,7 @@ body,
 }
 
 #root:before {
-  opacity: .05;
+  opacity: .15;
   background: theme('colors.yellow.500');
   border-radius: 50%;
   width: 80vw;
@@ -57,7 +57,7 @@ body,
 }
 
 #root:after {
-  opacity: .08;
+  opacity: .2;
   background: theme('colors.blue.500');
   border-radius: 50%;
   width: 60vw;
@@ -83,5 +83,11 @@ a:hover {
   }
   a:hover {
     color: theme('colors.blue.400');
+  }
+  #root:before {
+    opacity: .05;
+  }
+  #root:after {
+    opacity: .08;
   }
 }
