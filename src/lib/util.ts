@@ -127,3 +127,23 @@ export function downloadBlob(blob: Blob, filename: string = 'file') {
 
   a.click();
 }
+
+/**
+ * downloadUrl
+ */
+
+export function downloadUrl(url: string, filename: string = 'file') {
+  const a = document.createElement('a');
+
+  a.href = url;
+  a.download = filename;
+
+  function handleOnClick() {
+    setTimeout(() => URL.revokeObjectURL(url), 150);
+    removeEventListener('click', handleOnClick);
+  };
+
+  a.addEventListener('click', handleOnClick, false);
+
+  a.click();
+}

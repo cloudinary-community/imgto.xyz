@@ -15,8 +15,8 @@ export default function Home() {
             </p>
             <p>
               By signing up for a free Cloudinary account, you can instantly gain access to the same APIs and
-              more Cloudinary tech, including <a href="https://cloudinary.com/products/cloudinary_ai">AI tools</a> and
-              <a href="https://cloudinary.com/solutions/video">video</a>.
+              more Cloudinary tech,
+              including <a href="https://cloudinary.com/products/cloudinary_ai">AI tools</a> and <a href="https://cloudinary.com/solutions/video">video</a>.
             </p>
           </article>
         </Container>
