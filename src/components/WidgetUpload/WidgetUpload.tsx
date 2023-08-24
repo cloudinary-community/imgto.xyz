@@ -6,7 +6,8 @@ import pLimit from 'p-limit';
 import { cn, formatBytes, getFileBlob, downloadBlob, downloadUrl } from '@/lib/util';
 
 import Dropzone from '@/components/Dropzone';
-import Button from '../Button';
+import ProgressBar from '@/components/ProgressBar';
+import Button from '@/components/Button';
 
 const stateMap: { [key: string]: string } = {
   ready: 'Ready',
@@ -248,11 +249,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             </ul>
             <div className="mb-6">
               {typeof finishedCount === 'number' && typeof totalCount === 'number' && (
-                <div className="h-5 w-full rounded-sm overflow-hidden bg-slate-200 dark:bg-slate-600 mb-2">
-                  <span className="block h-full bg-green-600" style={{ width:  `${finishedCount / totalCount * 100}%` }}>
-                    <span className="sr-only">45% Complete</span>
-                  </span>
-                </div>
+                <ProgressBar progress={finishedCount / totalCount * 100} />
               )}
               <div className="flex justify-between">
                 <p className="text-xs font-bold">
@@ -315,11 +312,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                   <div className="grow">
                     <h3 className="font-bold mb-4">{ image.name }</h3>
                     <div className="mb-5">
-                      <div className="h-5 w-full rounded-sm overflow-hidden bg-slate-200 dark:bg-slate-600 mb-2">
-                        <span className="block h-full bg-green-600 transition-[width]" style={{ width: `${imageProgress}%` }}>
-                          <span className="sr-only">{ imageProgress }% Complete</span>
-                        </span>
-                      </div>
+                      <ProgressBar progress={imageProgress} />
                       <div className="flex justify-between">
                         <p className="text-xs font-bold">
                           { stateMap[image.state] }

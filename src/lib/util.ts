@@ -113,19 +113,7 @@ export async function getFileBlob(url: string) {
 
 export function downloadBlob(blob: Blob, filename: string = 'file') {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-
-  a.href = url;
-  a.download = filename;
-
-  function handleOnClick() {
-    setTimeout(() => URL.revokeObjectURL(url), 150);
-    removeEventListener('click', handleOnClick);
-  };
-
-  a.addEventListener('click', handleOnClick, false);
-
-  a.click();
+  downloadUrl(url, filename);
 }
 
 /**
