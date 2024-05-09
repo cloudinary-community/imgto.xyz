@@ -1,6 +1,7 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
 import { getCldOgImageUrl } from 'next-cloudinary';
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -34,6 +35,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
         </div>
+        <Analytics />
       </body>
     </html>
   )
