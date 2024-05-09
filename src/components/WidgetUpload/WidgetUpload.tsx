@@ -1,13 +1,15 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
 
-import { cn, formatBytes, getFileBlob, downloadBlob, downloadUrl, addNumbers } from '@/lib/util';
+import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
 
 import Dropzone from '@/components/Dropzone';
 import ProgressBar from '@/components/ProgressBar';
 import Button from '@/components/Button';
+import Result from '@/components/Result';
 
 const MAX_IMAGES = 20;
 const MAX_SIZE = 10; // #MB
@@ -24,21 +26,44 @@ interface WidgetUploadProps {
 }
 
 interface CloudinaryResult {
-  secure_url: string;
   bytes: number;
+  public_id: string;
+  secure_url: string;
+}
+
+interface ImageDownload {
+  url?: string;
+  size?: number;
+  data?: Blob;
 }
 
 interface Image {
   id: string;
   name: string;
+  format: string;
   size: number;
   data?: string | ArrayBuffer | null;
   file: File;
   state: string;
   upload?: CloudinaryResult;
-  optimizedUrl?: string;
-  optimizedSize?: number;
-  optimizedData?: Blob;
+  original?: ImageDownload;
+  avif?: ImageDownload;
+  webp?: ImageDownload;
+  jpeg?: ImageDownload;
+}
+
+const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg']
+
+
+
+function removeFormat(name: string) {
+  const split = name.split('.');
+
+  if ( ['avif', 'jpg', 'jpeg', 'png', 'webp'].includes(split[split.length - 1]) ) {
+    split.pop();
+  }
+
+  return split.join('.');
 }
 
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
@@ -53,7 +78,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const isDisabled = !!totalCount && totalCount >= MAX_IMAGES;
 
   const totalSizeOriginal = images && addNumbers(images.map(({ size }) => size));
-  const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ optimizedSize }) => optimizedSize || 0));
+  const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ original }) => original?.size || 0));
 
   let globalState = 'ready';
   
@@ -120,14 +145,38 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             const optimizedData = await getFileBlob(optimizedUrl);
             const optimizedSize = optimizedData.size;
 
+            const formats: Record<string, string | object> = {
+              original: {
+                url: optimizedUrl,
+                data: optimizedData,
+                size: optimizedSize
+              },
+              avif: {
+                url: getCldImageUrl({
+                  src: results.public_id,
+                  format: 'avif'
+                }),
+              },
+              webp: {
+                url: getCldImageUrl({
+                  src: results.public_id,
+                  format: 'webp'
+                }),
+              },
+              jpg: {
+                url: getCldImageUrl({
+                  src: results.public_id,
+                  format: 'jpg'
+                }),
+              },
+            };
+
             setImages(prev => {
               return [...(prev || [])].map(image => {
                 const nextImage = { ...image };
                 if ( image.id === imageToUpload.id ) {
                   nextImage.state = 'finished';
-                  nextImage.optimizedUrl = optimizedUrl;
-                  nextImage.optimizedSize = optimizedSize;
-                  nextImage.optimizedData = optimizedData;
+                  Object.assign(nextImage, formats);
                 }
                 return nextImage;
               });
@@ -154,9 +203,12 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     const dropDate = Date.now();
 
     const uploads = acceptedFiles.map(acceptedFile => {
+      const name = removeFormat(acceptedFile.name);
+
       const image: Image = {
         id: `${dropDate}-${acceptedFile.name}`,
-        name: acceptedFile.name,
+        name,
+        format: acceptedFile.name.replace(`${name}.`, ''),
         size: acceptedFile.size,
         file: acceptedFile,
         state: 'dropped'
@@ -209,14 +261,15 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     await Promise.all(filesQueue);
   }
 
-  function handleOnDownloadAll() {
-    const downloads = images?.filter(({ optimizedUrl }) => !!optimizedUrl).map(({ name, optimizedUrl }) => {
+  async function handleOnDownloadAll() {
+    const downloads = images?.filter(({ original }) => !!original).map(({ name, format, original }) => {
       return {
         name,
-        optimizedUrl
+        format,
+        url: original?.url
       }
     });
-    downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');
+    await downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');
   }
 
   return (
@@ -231,22 +284,25 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
         />
         {Array.isArray(images) && (
           <section>
-            <h2 className="flex justify-between mb-5">
+            <h2 className="flex justify-between mb-1">
               <span className="text-xl font-bold">{ images.length } images</span>
               {totalSizeOriginal && totalSizeOptimized && (
                 <span className="text-xl font-bold text-green-600">Saved { (( totalSizeOptimized / totalSizeOriginal ) * 100).toFixed(0) }%</span>
               )}
             </h2>
+            <p className="text-sm mb-5">
+              Total Original Size: { totalSizeOriginal && formatBytes(totalSizeOriginal, { fixed: 0 }) }
+            </p>
             <ul className="grid grid-cols-8 gap-2 mb-7">
-              {images.map((image, index) => {
+              {images.map((image) => {
                 return (
                   <li key={image.id} className="p-1 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
-                    <a href={`#image-${index}`}>
+                    <a href={`#${image.id}`}>
                       {image.data && (
                         <img className="block aspect-square object-cover rounded" src={image.data as string} alt="Upload preview" />  
                       )}
                       {!image.data && (
-                        <span className="block aspect-square w-full rounded bg-slate-200" />
+                        <span className="block aspect-square w-full rounded bg-zinc-200" />
                       )}
                     </a>
                   </li>
@@ -267,19 +323,20 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               </div>
             </div>
             <div className="flex justify-between mb-6">
-              <ul>
-                <li className="text-xs mb-2">Total Original: { totalSizeOriginal && formatBytes(totalSizeOriginal, { fixed: 0 }) }</li>
-                <li className="text-xs">Total Optimized: { totalSizeOptimized && formatBytes(totalSizeOptimized, { fixed: 0 }) }</li>
-              </ul>
               {globalState === 'finished' && (
-                <p>
-                  <Button onClick={handleOnDownloadAll}>
-                    <svg className="fill-white w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
-                      <path d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 219.8 0 273.2 0 336c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4zm-132.9 88.7L299.3 420.7c-6.2 6.2-16.4 6.2-22.6 0L171.3 315.3c-10.1-10.1-2.9-27.3 11.3-27.3H248V176c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16v112h65.4c14.2 0 21.4 17.2 11.3 27.3z"></path>
-                    </svg>
-                    Download All
-                  </Button>
-                </p>
+                <div>
+                  <p className="mb-2">
+                    <Button onClick={handleOnDownloadAll}>
+                      <svg className="fill-white w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+                        <path d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 219.8 0 273.2 0 336c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4zm-132.9 88.7L299.3 420.7c-6.2 6.2-16.4 6.2-22.6 0L171.3 315.3c-10.1-10.1-2.9-27.3 11.3-27.3H248V176c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16v112h65.4c14.2 0 21.4 17.2 11.3 27.3z"></path>
+                      </svg>
+                      Download All
+                    </Button>
+                  </p>
+                  <p className="block text-sm font-bold">
+                    Total Optimized: { totalSizeOptimized && formatBytes(totalSizeOptimized, { fixed: 0 }) }
+                  </p>
+                </div>
               )}
             </div>
           </section>
@@ -288,60 +345,10 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
       {Array.isArray(images) && (
         <div className="w-full max-w-2xl mx-auto">
           <ul>
-            {images.map((image, index) => {
-              // Fake the progress with simply the steps for now until we can get real upload progress
-              let imageProgress = 0;
-
-              if ( image.state === 'uploading' ) {
-                imageProgress = 33;
-              } else if ( image.state === 'optimizing' ) {
-                imageProgress = 66
-              } else if ( image.state === 'finished' ) {
-                imageProgress = 100;
-              }
-
-              function handleOnDownload() {
-                if ( !(image?.optimizedData instanceof Blob) ) return;
-                downloadBlob(image.optimizedData, image.name);
-              }
-
+            {images.map((image) => {
               return (
-                <li key={image.id} id={`image-${index}`} className="flex w-full gap-10 mb-10">
-                  <span className="w-full max-w-[12em] self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
-                    {image.data && (
-                      <img className="block rounded" src={image.data as string} alt="Upload preview" />
-                    )}
-                    {!image.data && (
-                      <span className="block aspect-video w-full rounded bg-slate-200" />
-                    )}
-                  </span>
-                  <div className="grow">
-                    <h3 className="font-bold mb-4">{ image.name }</h3>
-                    <div className="mb-5">
-                      <ProgressBar progress={imageProgress} />
-                      <div className="flex justify-between">
-                        <p className="text-xs font-bold">
-                          { stateMap[image.state] }
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between mb-6">
-                      <ul>
-                        <li className="text-xs mb-2">Total Original: { image.size && formatBytes(image.size) }</li>
-                        <li className="text-xs">Total Optimized: { image.optimizedSize && formatBytes(image.optimizedSize) }</li>
-                      </ul>
-                      <p>
-                        {image.optimizedData && (
-                          <Button onClick={handleOnDownload} size="xs">
-                            <svg className="fill-white w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
-                              <path d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 219.8 0 273.2 0 336c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4zm-132.9 88.7L299.3 420.7c-6.2 6.2-16.4 6.2-22.6 0L171.3 315.3c-10.1-10.1-2.9-27.3 11.3-27.3H248V176c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16v112h65.4c14.2 0 21.4 17.2 11.3 27.3z"></path>
-                            </svg>
-                            Download
-                          </Button>
-                        )}
-                      </p>
-                    </div>
-                  </div>
+                <li key={image.id} id={image.id} >
+                  <Result image={image} />
                 </li>
               )
             })}

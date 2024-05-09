@@ -108,26 +108,30 @@ export async function getFileBlob(url: string) {
 }
 
 /**
- * downloadBlob
- */
-
-export function downloadBlob(blob: Blob, filename: string = 'file') {
-  const url = URL.createObjectURL(blob);
-  downloadUrl(url, filename);
-}
-
-/**
  * downloadUrl
  */
 
-export function downloadUrl(url: string, filename: string = 'file') {
+interface DownloadUrlOptions {
+  downloadBlob?: boolean;
+}
+
+export async function downloadUrl(url: string, filename: string = 'file', options?: DownloadUrlOptions) {
+  const { downloadBlob = false } = options || {};
+  let downloadUrl = url;
+
+  if ( downloadBlob ) {
+    const blob = await getFileBlob(url);
+    const blobUrl = URL.createObjectURL(blob);
+    downloadUrl = blobUrl;
+  }
+
   const a = document.createElement('a');
 
-  a.href = url;
+  a.href = downloadUrl;
   a.download = filename;
 
   function handleOnClick() {
-    setTimeout(() => URL.revokeObjectURL(url), 150);
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 150);
     removeEventListener('click', handleOnClick);
   };
 

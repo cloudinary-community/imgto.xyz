@@ -7,7 +7,7 @@ const Nav = () => {
     <nav className="py-8">
       <Container className="flex justify-between items-center flex-col md:flex-row">
         <p className="text-center mb-4 md:mb-0">
-          <Link href="/" className="text-3xl font-bold text-slate-900 dark:text-white hover:text-slate-900 dark:hover:text-gray-100 drop-shadow-[0_2px_0px_rgba(255,255,255,1)] dark:drop-shadow-[0_2px_0px_rgba(0,0,0,1)]">
+          <Link href="/" className="text-3xl font-bold text-zinc-900 dark:text-white hover:text-zinc-900 dark:hover:text-gray-100 drop-shadow-[0_2px_0px_rgba(255,255,255,1)] dark:drop-shadow-[0_2px_0px_rgba(0,0,0,1)]">
             <svg width="180" height="42" viewBox="0 0 180 42" fill="none" xmlns="http://www.w3.org/2000/svg">
               <title>imgto.xyz</title>
               <path d="M0.44 31.812V9.988H6.908V31.812H0.44ZM3.652 6.776C2.56667 6.776 1.68667 6.468 1.012 5.852C0.337333 5.236 0 4.41467 0 3.388C0 2.36133 0.337333 1.54 1.012 0.924002C1.68667 0.308001 2.56667 0 3.652 0C4.73733 0 5.61733 0.308001 6.292 0.924002C6.96667 1.54 7.304 2.36133 7.304 3.388C7.304 4.41467 6.96667 5.236 6.292 5.852C5.61733 6.468 4.73733 6.776 3.652 6.776Z" fill="currentColor"/>
@@ -24,17 +24,17 @@ const Nav = () => {
         </p>
         <ul className="flex m-0">
           <li className="mr-6">
-            <Link href="/how-to-use" className="text-slate-600 dark:text-slate-300 text-inherit">
+            <Link href="/how-to-use" className="text-zinc-600 dark:text-zinc-300 text-inherit">
               How to Use
             </Link>
           </li>
           <li className="mr-6">
-            <Link href="/developer-api" className="text-slate-600 dark:text-slate-300 text-inherit">
+            <Link href="/developer-api" className="text-zinc-600 dark:text-zinc-300 text-inherit">
               Developer API
             </Link>
           </li>
           <li>
-            <Link href="/pricing" className="text-slate-600 dark:text-slate-300 text-inherit">
+            <Link href="/pricing" className="text-zinc-600 dark:text-zinc-300 text-inherit">
               Pricing
             </Link>
           </li>

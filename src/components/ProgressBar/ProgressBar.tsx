@@ -13,7 +13,7 @@ const ProgressBar = ({ className = '', progress = 0 }: ProgressBarProps) => {
   }
 
   return (
-    <span className={cn(`block h-5 w-full rounded-sm overflow-hidden bg-slate-200 dark:bg-slate-600 mb-2`, className)}>
+    <span className={cn(`block h-5 w-full rounded-sm overflow-hidden bg-zinc-200 dark:bg-zinc-600 mb-2`, className)}>
       <span className={progressStyles} style={{ width: `${progress}%` }}>
         <span className="sr-only">{ progress }% Complete</span>
       </span>

@@ -5,10 +5,10 @@ export async function GET(request: Request) {
   const urls = JSON.parse(searchParams.get('urls') || '')
 
   try {
-    const downloads = await Promise.all(urls?.map(async (url: { optimizedUrl: string; name: string; }) => {
+    const downloads = await Promise.all(urls?.map(async ({ url, name, format }: { url: string; name: string; format: string; }) => {
       return {
-        data: await fetch(url.optimizedUrl).then(r => r.arrayBuffer()),
-        name: url.name
+        data: await fetch(url).then(r => r.arrayBuffer()),
+        name: `${name}.${format}`
       }
     }));
 
@@ -18,13 +18,13 @@ export async function GET(request: Request) {
       zip.file(download.name, download.data);
     });
 
-    const test: Blob = await new Promise((resolve) => {
+    const archive: Blob = await new Promise((resolve) => {
       zip.generateAsync({type:"blob"}).then(function(content) {
         resolve(content);
       });
     })
 
-    return new Response(test, {
+    return new Response(archive, {
       status: 200,
       headers: {
         'Content-Type': 'application/octet-stream'
