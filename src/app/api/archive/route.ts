@@ -1,11 +1,17 @@
 import JSZip from 'jszip';
 
+interface ArchiveDownload {
+  format: string;
+  name: string;
+  url: string;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const urls = JSON.parse(searchParams.get('urls') || '')
 
   try {
-    const downloads = await Promise.all(urls?.map(async ({ url, name, format }: { url: string; name: string; format: string; }) => {
+    const downloads = await Promise.all(urls?.map(async ({ url, name, format }: ArchiveDownload) => {
       return {
         data: await fetch(url).then(r => r.arrayBuffer()),
         name: `${name}.${format}`

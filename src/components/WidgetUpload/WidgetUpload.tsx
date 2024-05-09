@@ -5,6 +5,7 @@ import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
 
 import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
+import { ImageUpload } from '@/types/image';
 
 import Dropzone from '@/components/Dropzone';
 import ProgressBar from '@/components/ProgressBar';
@@ -12,7 +13,7 @@ import Button from '@/components/Button';
 import Result from '@/components/Result';
 
 const MAX_IMAGES = 20;
-const MAX_SIZE = 10; // #MB
+const MAX_SIZE = 10; // MB
 
 const stateMap: { [key: string]: string } = {
   ready: 'Ready',
@@ -25,49 +26,8 @@ interface WidgetUploadProps {
   className?: string;
 }
 
-interface CloudinaryResult {
-  bytes: number;
-  public_id: string;
-  secure_url: string;
-}
-
-interface ImageDownload {
-  url?: string;
-  size?: number;
-  data?: Blob;
-}
-
-interface Image {
-  id: string;
-  name: string;
-  format: string;
-  size: number;
-  data?: string | ArrayBuffer | null;
-  file: File;
-  state: string;
-  upload?: CloudinaryResult;
-  original?: ImageDownload;
-  avif?: ImageDownload;
-  webp?: ImageDownload;
-  jpeg?: ImageDownload;
-}
-
-const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg']
-
-
-
-function removeFormat(name: string) {
-  const split = name.split('.');
-
-  if ( ['avif', 'jpg', 'jpeg', 'png', 'webp'].includes(split[split.length - 1]) ) {
-    split.pop();
-  }
-
-  return split.join('.');
-}
-
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
-  const [images, setImages] = useState<Array<Image> | null>(null);
+  const [images, setImages] = useState<Array<ImageUpload> | null>(null);
 
   const imageStates = images?.map(({ state }) => state);
   const uploadingCount = imageStates?.filter(state => state === 'uploading').length;
@@ -78,7 +38,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const isDisabled = !!totalCount && totalCount >= MAX_IMAGES;
 
   const totalSizeOriginal = images && addNumbers(images.map(({ size }) => size));
-  const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ original }) => original?.size || 0));
+  const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ optimized }) => optimized?.size || 0));
 
   let globalState = 'ready';
   
@@ -105,7 +65,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
       const uploadsQueue = filesToUpload.map((upload) => {
         return limitUploadFiles(() => {
           async function uploadFile() {
-            const imageToUpload = upload as Image;
+            const imageToUpload = upload as ImageUpload;
 
             setImages(prev => {
               return [...(prev || [])].map(image => {
@@ -139,14 +99,15 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
 
             const optimizedUrl = getCldImageUrl({
               src: results.public_id,
-              format: 'default'
+              format: 'default',
+              quality: 'auto:low'
             });
 
             const optimizedData = await getFileBlob(optimizedUrl);
             const optimizedSize = optimizedData.size;
 
             const formats: Record<string, string | object> = {
-              original: {
+              optimized: {
                 url: optimizedUrl,
                 data: optimizedData,
                 size: optimizedSize
@@ -202,19 +163,39 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   async function handleOnDrop(acceptedFiles: Array<File>) {
     const dropDate = Date.now();
 
-    const uploads = acceptedFiles.map(acceptedFile => {
-      const name = removeFormat(acceptedFile.name);
-
-      const image: Image = {
+    const uploads = await Promise.all(acceptedFiles.map(async acceptedFile => {
+      const image: ImageUpload = {
         id: `${dropDate}-${acceptedFile.name}`,
-        name,
-        format: acceptedFile.name.replace(`${name}.`, ''),
+        name: acceptedFile.name,
         size: acceptedFile.size,
         file: acceptedFile,
         state: 'dropped'
       }
+      
+      const dimensions: { width: number; height: number; } = await new Promise((resolve) => {
+        const reader = new FileReader;
+
+        reader.onload = function() { // file is loaded
+          const img = new Image;
+  
+          img.onload = function() {
+            resolve({
+              width: img.width,
+              height: img.height
+            });
+          };
+  
+          img.src = reader.result as string;
+        };
+  
+        reader.readAsDataURL(acceptedFile);
+      });
+
+      image.width = dimensions.width;
+      image.height = dimensions.height;
+      
       return image;
-    })
+    }));
 
     setImages(prev => {
       const nextImages = [
@@ -248,8 +229,6 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                   return nextImage;
                 });
               });
-
-              resolve(results);
             })
           }
 
@@ -262,11 +241,11 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   }
 
   async function handleOnDownloadAll() {
-    const downloads = images?.filter(({ original }) => !!original).map(({ name, format, original }) => {
+    const downloads = images?.filter(({ optimized }) => !!optimized).map(({ name, upload, optimized }) => {
       return {
         name,
-        format,
-        url: original?.url
+        format: upload?.format,
+        url: optimized?.url
       }
     });
     await downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');

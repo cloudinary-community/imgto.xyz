@@ -18,6 +18,11 @@
   -webkit-text-size-adjust: 100%;
 }
 
+html,
+body {
+  scroll-behavior: smooth
+}
+
 body,
 #root {
   min-height: 100vh;

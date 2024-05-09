@@ -1,8 +1,12 @@
+"use client";
+
 import { LoaderCircle, DownloadIcon } from 'lucide-react';
 
 import { downloadUrl, formatBytes } from '@/lib/util';
+import { ImageDownload, ImageUpload } from '@/types/image';
 
 import ProgressBar from '@/components/ProgressBar';
+import CldImage from '@/components/CldImage';
 import Button from '@/components/Button';
 
 const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg']
@@ -14,38 +18,13 @@ const stateMap: { [key: string]: string } = {
   optimizing: 'Optimizing',
 }
 
-interface ImageDownload {
-  url?: string;
-  size?: number;
-  data?: Blob;
-}
-
-interface Image {
-  id: string;
-  name: string;
-  format: string;
-  size: number;
-  data?: string | ArrayBuffer | null;
-  file: File;
-  state: string;
-  upload?: CloudinaryResult;
-  original?: ImageDownload;
-  avif?: ImageDownload;
-  webp?: ImageDownload;
-  jpeg?: ImageDownload;
-}
-
-interface CloudinaryResult {
-  bytes: number;
-  public_id: string;
-  secure_url: string;
-}
-
 interface DownloadProps {
-  image: Image;
+  image: ImageUpload;
 }
 
-const Download = ({ image }: DownloadProps) => {
+const Result = ({ image }: DownloadProps) => {
+  const downloadName = image.upload?.original_filename;
+
   let imageProgress = 0;
 
   if ( image.state === 'uploading' ) {
@@ -56,19 +35,27 @@ const Download = ({ image }: DownloadProps) => {
     imageProgress = 100;
   }
 
-  async function downloadFile(url: string, name: string, format: string) {
-    if ( typeof image?.original?.url !== 'string' ) return;
-    await downloadUrl(url, `${name}.${format}`, { downloadBlob: true });
+  async function downloadFile(url: string, format: string) {
+    if ( typeof image?.optimized?.url !== 'string' ) return;
+    await downloadUrl(url, `${downloadName}.${format}`, { downloadBlob: true });
   }
   
   return (
     <div className="flex w-full gap-10 mb-10">
       <span className="relative w-full max-w-[12em] self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
-        {image.data && (
-          <img className="block rounded" src={image.data as string} alt="Upload preview" />
+        {image.upload && (
+          <CldImage
+            className="block rounded"
+            width={image.width}
+            height={image.height}
+            src={image.upload.public_id}
+            alt="Upload preview"
+          />
         )}
-        {!image.data && (
-          <span className="block aspect-video w-full rounded bg-zinc-200" />
+        {!image.upload && (
+          <span className={`block w-full rounded bg-white`} style={{
+            aspectRatio: `${image.width}/${image.height}`
+          }} />
         )}
       </span>
       <div className="grow">
@@ -90,29 +77,29 @@ const Download = ({ image }: DownloadProps) => {
                 <p>
                   <Button
                     onClick={async () => {
-                      if ( !image?.original?.url ) return;
-                      await downloadFile(image.original.url, image.name, image.format);
+                      if ( !image?.optimized?.url || !image.upload?.format ) return;
+                      await downloadFile(image.optimized.url, image.upload.format);
                     }}
                   >
                     <DownloadIcon className="w-5 h-5 text-white" />
-                    Download { image.format?.toUpperCase() }
+                    Download { image.upload?.format?.toUpperCase() }
                   </Button>
-                  {image?.original?.size && (
-                    <span className="block text-sm font-semibold mt-2">Optimized Size: {formatBytes(image?.original?.size, { fixed: 0 }) }</span>
+                  {image?.optimized?.size && (
+                    <span className="block text-sm font-semibold mt-2">Optimized Size: {formatBytes(image?.optimized?.size, { fixed: 0 }) }</span>
                   )}
                 </p>
                 <ul>
                   {DOWNLOAD_FORMATS
-                    .filter(format => image?.[format as keyof Image])
+                    .filter(format => image?.[format as keyof ImageUpload])
                     .map(format => {
-                      const download = image[format as keyof Image] as ImageDownload;
+                      const download = image[format as keyof ImageUpload] as ImageDownload;
                       return (
                         <li key={format} className="text-sm mb-1">
                           <button
                             className="text-blue-600 hover:underline"
                             onClick={async () => {
                               if ( !download?.url ) return;
-                              await downloadFile(download.url, image.name, format);
+                              await downloadFile(download.url, format);
                             }}
                           >
                             Dowload as .{ format }
@@ -152,4 +139,4 @@ const Download = ({ image }: DownloadProps) => {
   )
 }
 
-export default Download;
+export default Result;
