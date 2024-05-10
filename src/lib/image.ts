@@ -1,3 +1,7 @@
+/**
+ * resizeImage
+ */
+
 export function resizeImage(image: HTMLImageElement | HTMLCanvasElement, { width, height }: { width: number; height: number; }) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');

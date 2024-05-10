@@ -60,7 +60,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   }
 
   useEffect(() => {
-    const filesToUpload = images?.filter(({ state }) => state === 'read');
+    const filesToUpload = images?.filter(({ state }) => state === 'preview');
 
     console.log('filesToUpload', filesToUpload)
 
@@ -163,6 +163,118 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     })();
   }, [images]);
 
+  interface ReadImageReturn {
+    img: HTMLImageElement;
+    data: string | ArrayBuffer | null;
+  }
+
+  function readImage(file: File): Promise<ReadImageReturn> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader;
+
+      reader.onload = function() {
+        const img = new Image;
+
+        img.onerror = function() {
+          reject(null);
+        }
+
+        img.onload = function() {
+          resolve({
+            data: reader.result,
+            img
+          });
+        };
+
+        img.src = reader.result as string;
+      };
+
+      reader.readAsDataURL(file);
+    })  
+  }
+
+  useEffect(() => {
+    const files = images?.filter(({ state }) => state === 'dropped');
+
+    if ( !files || files.length === 0 ) return;
+
+    files.forEach(async (file) => {
+      const { img, data } = await readImage(file.file);
+
+      const imageData = {
+        img,
+        data,
+        width: img.width,
+        height: img.height,
+        state: 'read'
+      }
+
+      setImages(prev => {
+        return [...(prev || [])].map(image => {
+          let nextImage = { ...image };
+          if ( image.id === file.id ) {
+            nextImage = {
+              ...file,
+              ...imageData,
+            };
+          }
+          return nextImage;
+        });
+      });
+    });
+  }, [images])
+
+  // Create smaller preview for all of the images to avoid the UI getting laggy
+  
+  useEffect(() => {
+    const files = images?.filter(({ state }) => state === 'read');
+
+    if ( !files || files.length === 0 ) return;
+
+    files.forEach(async (file) => {
+      if ( !file.img ) return;
+
+      const resizedWidth400 = 400;
+      const resizedHeight400 = (400 / file.img.width) * file.img.height;
+      const resizedWidth200 = 200;
+      const resizedHeight200 = (200 / file.img.width) * file.img.height;
+
+      const imageData = {
+        thumb200: {
+          data: resizeImage(file.img, {
+            width: resizedWidth200,
+            height: resizedHeight200
+          }),
+          width: resizedWidth200,
+          height: resizedHeight200
+        },
+        thumb400: {
+          data: resizeImage(file.img, {
+            width: resizedWidth400,
+            height: resizedHeight400
+          }),
+          width: resizedWidth400,
+          height: resizedHeight400
+        }
+      }
+
+      setImages(prev => {
+        return [...(prev || [])].map(image => {
+          let nextImage = { ...image };
+          if ( image.id === file.id ) {
+            nextImage = {
+              ...file,
+              ...imageData,
+              state: 'preview'
+            };
+          }
+          return nextImage;
+        });
+      });
+    })
+  }, [images])
+
+
   /**
    * handleOnDrop
    */
@@ -170,120 +282,23 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   async function handleOnDrop(acceptedFiles: Array<File>) {
     const dropDate = Date.now();
 
-    const uploads = await Promise.all(acceptedFiles.map(async acceptedFile => {
-      const image: ImageUpload = {
+    const files = acceptedFiles.map(acceptedFile => {
+      return {
         id: `${dropDate}-${acceptedFile.name}`,
         name: acceptedFile.name,
         size: acceptedFile.size,
         file: acceptedFile,
         state: 'dropped'
       }
-
-      interface Dimension {
-        data: string;
-        height: number;
-        width: number;
-      }
-
-      interface Dimensions {
-        width: number;
-        height: number;
-        thumb400: Dimension;
-        thumb200: Dimension;
-      }
-      
-      const dimensions: Dimensions = await new Promise((resolve) => {
-        const reader = new FileReader;
-
-        reader.onload = function() { // file is loaded
-          const img = new Image;
-  
-          img.onload = function() {
-
-            const resizedWidth400 = 400;
-            const resizedHeight400 = (400 / img.width) * img.height;
-            const resizedWidth200 = 200;
-            const resizedHeight200 = (200 / img.width) * img.height;
-
-            resolve({
-              width: img.width,
-              height: img.height,
-              thumb200: {
-                data: resizeImage(img, {
-                  width: resizedWidth200,
-                  height: resizedHeight200
-                }),
-                width: resizedWidth200,
-                height: resizedHeight200
-              },
-              thumb400: {
-                data: resizeImage(img, {
-                  width: resizedWidth400,
-                  height: resizedHeight400
-                }),
-                width: resizedWidth400,
-                height: resizedHeight400
-              }
-            });
-          };
-  
-          img.src = reader.result as string;
-        };
-  
-        reader.readAsDataURL(acceptedFile);
-      });
-
-      image.width = dimensions.width;
-      image.height = dimensions.height;
-      image.thumb200 = dimensions.thumb200;
-      image.thumb400 = dimensions.thumb400;
-      
-      return image;
-    }));
+    })
 
     setImages(prev => {
       const nextImages = [
         ...(prev || []),
-        ...uploads
+        ...files
       ];
       return nextImages;
     });
-
-    const limitReadFiles = pLimit(5);
-
-    const filesQueue = uploads.map((upload: any) => {
-      return limitReadFiles(() => {
-        return new Promise((resolve) => {
-          const file = new FileReader;
-
-          file.onload = function() {
-            requestAnimationFrame(() => {
-              const results = {
-                ...upload,
-                data: file.result,
-                state: 'read'
-              }
-
-              setImages(prev => {
-                return [...(prev || [])].map(image => {
-                  let nextImage = { ...image };
-                  if ( image.id === upload.id ) {
-                    nextImage = { ...results };
-                  }
-                  return nextImage;
-                });
-              });
-
-              resolve(results);
-            })
-          }
-
-          file.readAsDataURL(upload.file)
-        })
-      });
-    });
-
-    await Promise.all(filesQueue);
   }
 
   async function handleOnDownloadAll() {
@@ -322,19 +337,17 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               {images.map((image) => {
                 return (
                   <li key={image.id} className="p-1 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
-                    <a href={`#${image.id}`}>
-                      {image.thumb200 && (
+                    <a href={`#${image.id}`} className="block aspect-square relative">
+                      {(image.data || image.thumb400 ) && (
                         <img
-                          className="block aspect-square object-cover rounded"
-                          src={image.thumb200.data as string}
-                          width={image.thumb200.width}
-                          height={image.thumb200.height}
+                          className="block aspect-square object-cover rounded relative z-10"
+                          width={image.thumb400?.width || image.width}
+                          height={image.thumb400?.height || image.height}
+                          src={(image.thumb400?.data || image.data) as string }
                           alt="Upload preview"
                         />  
                       )}
-                      {!image.thumb200 && (
-                        <span className="block aspect-square w-full rounded bg-zinc-200" />
-                      )}
+                      <span className={`block absolute top-0 left-0 z-0 w-full aspect-square rounded bg-zinc-200 animate-pulse`} />
                     </a>
                   </li>
                 );

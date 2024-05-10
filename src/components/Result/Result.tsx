@@ -40,15 +40,17 @@ const Result = ({ image }: DownloadProps) => {
     await downloadUrl(url, `${downloadName}.${format}`, { downloadBlob: true });
   }
   
+
+  console.log('image', image)
   return (
     <div className="flex w-full gap-10 mb-10">
       <span className="relative w-full max-w-[12em] self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
-        {image.upload && (
+        {(image.data || image.thumb400 ) && (
           <img
             className="block rounded relative z-10"
-            width={image.thumb400?.width}
-            height={image.thumb400?.height}
-            src={image.thumb400?.data as string}
+            width={image.thumb400?.width || image.width}
+            height={image.thumb400?.height || image.height}
+            src={(image.thumb400?.data || image.data) as string }
             alt="Upload preview"
             loading="lazy"
           />
@@ -110,7 +112,7 @@ const Result = ({ image }: DownloadProps) => {
               </>
             )}
             
-            {['dropped', 'read', 'uploading', 'optimizing'].includes(image.state) && (
+            {['dropped', 'read', 'preview', 'uploading', 'optimizing'].includes(image.state) && (
               <>
                 <p>
                   <Button disabled>

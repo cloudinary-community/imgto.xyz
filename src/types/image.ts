@@ -11,6 +11,7 @@ export interface ImageUpload {
     height: number;
     width: number;
   };
+  img?: HTMLImageElement;
   id: string;
   name: string;
   size: number;
