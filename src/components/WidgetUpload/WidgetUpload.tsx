@@ -6,6 +6,7 @@ import pLimit from 'p-limit';
 
 import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
 import { readImage } from '@/lib/image';
+import { uploadFile } from '@/lib/cloudinary';
 import { ImageUpload } from '@/types/image';
 
 import Dropzone from '@/components/Dropzone';
@@ -44,7 +45,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ optimized }) => optimized?.size || 0));
 
   let globalState = 'ready';
-  
+
   if ( finishedCount === totalCount ) {
     globalState = 'finished'
   } else if ( typeof uploadingCount === 'number' && uploadingCount > 0 ) {
@@ -80,17 +81,10 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
 
       const uploadsQueue = filesToUpload.map((upload: any) => {
         return limitUploadFiles(() => {
-          async function uploadFile() {
+          async function startUpload() {
             const imageToUpload = upload as ImageUpload;
 
-            const formData = new FormData();
-
-            formData.append('file', imageToUpload.file);
-
-            const results = await fetch('/api/upload', {
-              method: 'POST',
-              body: formData
-            }).then(r => r.json());
+            const results = await uploadFile(imageToUpload.file);
 
             setImages(prev => {
               return [...(prev || [])].map(image => {
@@ -154,7 +148,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               upload
             }
           }
-          return uploadFile();
+          return startUpload();
         });
       });
 
@@ -280,7 +274,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                           height={image.thumb400?.height || image.height}
                           src={(image.thumb400?.data || image.data) as string }
                           alt="Upload preview"
-                        />  
+                        />
                       )}
                       <span className={`block absolute top-0 left-0 z-0 w-full aspect-square rounded bg-zinc-200 animate-pulse`} />
                     </a>

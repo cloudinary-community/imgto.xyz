@@ -38,7 +38,7 @@ const Result = ({ image }: DownloadProps) => {
     if ( typeof image?.optimized?.url !== 'string' ) return;
     await downloadUrl(url, `${downloadName}.${format}`, { downloadBlob: true });
   }
-  
+
   return (
     <div className="flex w-full gap-10 mb-10">
       <span className="relative w-full max-w-[12em] self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
@@ -106,7 +106,7 @@ const Result = ({ image }: DownloadProps) => {
                 </ul>
               </>
             )}
-            
+
             {['dropped', 'reading', 'read', 'uploading', 'optimizing'].includes(image.state) && (
               <>
                 <p>
