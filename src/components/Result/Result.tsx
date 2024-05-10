@@ -44,19 +44,18 @@ const Result = ({ image }: DownloadProps) => {
     <div className="flex w-full gap-10 mb-10">
       <span className="relative w-full max-w-[12em] self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
         {image.upload && (
-          <CldImage
-            className="block rounded"
-            width={image.width}
-            height={image.height}
-            src={image.upload.public_id}
+          <img
+            className="block rounded relative z-10"
+            width={image.thumb400?.width}
+            height={image.thumb400?.height}
+            src={image.thumb400?.data as string}
             alt="Upload preview"
+            loading="lazy"
           />
         )}
-        {!image.upload && (
-          <span className={`block w-full rounded bg-white`} style={{
-            aspectRatio: `${image.width}/${image.height}`
-          }} />
-        )}
+        <span className={`block absolute top-0 left-0 z-0 w-full rounded bg-zinc-300 animate-pulse`} style={{
+          aspectRatio: `${image.width}/${image.height}`
+        }} />
       </span>
       <div className="grow">
         <h3 className="font-bold mb-1">{ image.name }</h3>

@@ -5,6 +5,7 @@ import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
 
 import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
+import { resizeImage } from '@/lib/image';
 import { ImageUpload } from '@/types/image';
 
 import Dropzone from '@/components/Dropzone';
@@ -26,8 +27,12 @@ interface WidgetUploadProps {
   className?: string;
 }
 
+
+
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const [images, setImages] = useState<Array<ImageUpload> | null>(null);
+
+  console.log('images', images)
 
   const imageStates = images?.map(({ state }) => state);
   const uploadingCount = imageStates?.filter(state => state === 'uploading').length;
@@ -57,16 +62,18 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   useEffect(() => {
     const filesToUpload = images?.filter(({ state }) => state === 'read');
 
+    console.log('filesToUpload', filesToUpload)
+
     if ( !Array.isArray(filesToUpload) || filesToUpload.length === 0 ) return;
 
     (async function run() {
       const limitUploadFiles = pLimit(4);
 
-      const uploadsQueue = filesToUpload.map((upload) => {
+      const uploadsQueue = filesToUpload.map((upload: any) => {
         return limitUploadFiles(() => {
           async function uploadFile() {
             const imageToUpload = upload as ImageUpload;
-
+            console.log('uploading', upload)
             setImages(prev => {
               return [...(prev || [])].map(image => {
                 const nextImage = {...image};
@@ -171,17 +178,52 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
         file: acceptedFile,
         state: 'dropped'
       }
+
+      interface Dimension {
+        data: string;
+        height: number;
+        width: number;
+      }
+
+      interface Dimensions {
+        width: number;
+        height: number;
+        thumb400: Dimension;
+        thumb200: Dimension;
+      }
       
-      const dimensions: { width: number; height: number; } = await new Promise((resolve) => {
+      const dimensions: Dimensions = await new Promise((resolve) => {
         const reader = new FileReader;
 
         reader.onload = function() { // file is loaded
           const img = new Image;
   
           img.onload = function() {
+
+            const resizedWidth400 = 400;
+            const resizedHeight400 = (400 / img.width) * img.height;
+            const resizedWidth200 = 200;
+            const resizedHeight200 = (200 / img.width) * img.height;
+
             resolve({
               width: img.width,
-              height: img.height
+              height: img.height,
+              thumb200: {
+                data: resizeImage(img, {
+                  width: resizedWidth200,
+                  height: resizedHeight200
+                }),
+                width: resizedWidth200,
+                height: resizedHeight200
+              },
+              thumb400: {
+                data: resizeImage(img, {
+                  width: resizedWidth400,
+                  height: resizedHeight400
+                }),
+                width: resizedWidth400,
+                height: resizedHeight400
+              }
             });
           };
   
@@ -193,6 +235,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
 
       image.width = dimensions.width;
       image.height = dimensions.height;
+      image.thumb200 = dimensions.thumb200;
+      image.thumb400 = dimensions.thumb400;
       
       return image;
     }));
@@ -205,9 +249,9 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
       return nextImages;
     });
 
-    const limitReadFiles = pLimit(1);
+    const limitReadFiles = pLimit(5);
 
-    const filesQueue = uploads.map(upload => {
+    const filesQueue = uploads.map((upload: any) => {
       return limitReadFiles(() => {
         return new Promise((resolve) => {
           const file = new FileReader;
@@ -229,6 +273,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                   return nextImage;
                 });
               });
+
+              resolve(results);
             })
           }
 
@@ -277,10 +323,16 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 return (
                   <li key={image.id} className="p-1 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
                     <a href={`#${image.id}`}>
-                      {image.data && (
-                        <img className="block aspect-square object-cover rounded" src={image.data as string} alt="Upload preview" />  
+                      {image.thumb200 && (
+                        <img
+                          className="block aspect-square object-cover rounded"
+                          src={image.thumb200.data as string}
+                          width={image.thumb200.width}
+                          height={image.thumb200.height}
+                          alt="Upload preview"
+                        />  
                       )}
-                      {!image.data && (
+                      {!image.thumb200 && (
                         <span className="block aspect-square w-full rounded bg-zinc-200" />
                       )}
                     </a>

@@ -1,6 +1,16 @@
 import { CloudinaryResource } from '@/types/cloudinary';
 
 export interface ImageUpload {
+  thumb200?: {
+    data: string;
+    height: number;
+    width: number;
+  };
+  thumb400?: {
+    data: string;
+    height: number;
+    width: number;
+  };
   id: string;
   name: string;
   size: number;
