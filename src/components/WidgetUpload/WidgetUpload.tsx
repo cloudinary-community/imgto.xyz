@@ -256,7 +256,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             <h2 className="flex justify-between mb-1">
               <span className="text-xl font-bold">{ images.length } images</span>
               {totalSizeOriginal && totalSizeOptimized && (
-                <span className="text-xl font-bold text-green-600">Saved { (( totalSizeOptimized / totalSizeOriginal ) * 100).toFixed(0) }%</span>
+                <span className="text-xl font-bold text-green-600">Saved { (100 - (( totalSizeOptimized / totalSizeOriginal ) * 100)).toFixed(0) }%</span>
               )}
             </h2>
             <p className="text-sm mb-5">
