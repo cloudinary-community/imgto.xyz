@@ -25,3 +25,37 @@ export function resizeImage(image: HTMLImageElement | HTMLCanvasElement, { width
 
   return dataurl;
 }
+
+/**
+ * readImage
+ */
+
+interface ReadImageReturn {
+  img: HTMLImageElement;
+  data: string | ArrayBuffer | null;
+}
+
+export function readImage(file: File): Promise<ReadImageReturn> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader;
+
+    reader.onload = function() {
+      const img = new Image;
+
+      img.onerror = function() {
+        reject(null);
+      }
+
+      img.onload = function() {
+        resolve({
+          data: reader.result,
+          img
+        });
+      };
+
+      img.src = reader.result as string;
+    };
+
+    reader.readAsDataURL(file);
+  })  
+}

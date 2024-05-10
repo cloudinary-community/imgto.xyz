@@ -6,7 +6,6 @@ import { downloadUrl, formatBytes } from '@/lib/util';
 import { ImageDownload, ImageUpload } from '@/types/image';
 
 import ProgressBar from '@/components/ProgressBar';
-import CldImage from '@/components/CldImage';
 import Button from '@/components/Button';
 
 const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg']
@@ -40,24 +39,20 @@ const Result = ({ image }: DownloadProps) => {
     await downloadUrl(url, `${downloadName}.${format}`, { downloadBlob: true });
   }
   
-
-  console.log('image', image)
   return (
     <div className="flex w-full gap-10 mb-10">
       <span className="relative w-full max-w-[12em] self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
-        {(image.data || image.thumb400 ) && (
+        {image.data && (
           <img
-            className="block rounded relative z-10"
-            width={image.thumb400?.width || image.width}
-            height={image.thumb400?.height || image.height}
-            src={(image.thumb400?.data || image.data) as string }
+            className="block rounded relative z-10 aspect-square object-cover"
+            width={image.width}
+            height={image.height}
+            src={image.data as string }
             alt="Upload preview"
             loading="lazy"
           />
         )}
-        <span className={`block absolute top-0 left-0 z-0 w-full rounded bg-zinc-300 animate-pulse`} style={{
-          aspectRatio: `${image.width}/${image.height}`
-        }} />
+        <span className={`block absolute top-0 left-0 z-0 w-full rounded aspect-square bg-zinc-300 animate-pulse`} />
       </span>
       <div className="grow">
         <h3 className="font-bold mb-1">{ image.name }</h3>
@@ -112,7 +107,7 @@ const Result = ({ image }: DownloadProps) => {
               </>
             )}
             
-            {['dropped', 'read', 'preview', 'uploading', 'optimizing'].includes(image.state) && (
+            {['dropped', 'reading', 'read', 'uploading', 'optimizing'].includes(image.state) && (
               <>
                 <p>
                   <Button disabled>

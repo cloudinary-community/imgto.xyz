@@ -5,7 +5,7 @@ import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
 
 import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
-import { resizeImage } from '@/lib/image';
+import { readImage } from '@/lib/image';
 import { ImageUpload } from '@/types/image';
 
 import Dropzone from '@/components/Dropzone';
@@ -32,8 +32,6 @@ interface WidgetUploadProps {
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const [images, setImages] = useState<Array<ImageUpload> | null>(null);
 
-  console.log('images', images)
-
   const imageStates = images?.map(({ state }) => state);
   const uploadingCount = imageStates?.filter(state => state === 'uploading').length;
   const finishedCount = imageStates?.filter(state => state === 'finished').length;
@@ -59,30 +57,31 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     uploadContainerClassName = 'grid md:grid-cols-2 gap-10';
   }
 
-  useEffect(() => {
-    const filesToUpload = images?.filter(({ state }) => state === 'preview');
+  // Upload all of the images
 
-    console.log('filesToUpload', filesToUpload)
+  useEffect(() => {
+    const filesToUpload = images?.filter(({ state }) => state === 'read');
+    const ids = filesToUpload?.map(({ id }) => id);
 
     if ( !Array.isArray(filesToUpload) || filesToUpload.length === 0 ) return;
 
+    setImages(prev => {
+      return [...(prev || [])].map(image => {
+        const nextImage = { ...image };
+        if ( ids?.includes(nextImage.id) ) {
+          nextImage.state = 'uploading';
+        }
+        return nextImage;
+      });
+    });
+
     (async function run() {
-      const limitUploadFiles = pLimit(4);
+      const limitUploadFiles = pLimit(10);
 
       const uploadsQueue = filesToUpload.map((upload: any) => {
         return limitUploadFiles(() => {
           async function uploadFile() {
             const imageToUpload = upload as ImageUpload;
-            console.log('uploading', upload)
-            setImages(prev => {
-              return [...(prev || [])].map(image => {
-                const nextImage = {...image};
-                if ( image.id === imageToUpload.id ) {
-                  nextImage.state = 'uploading';
-                }
-                return nextImage;
-              });
-            });
 
             const formData = new FormData();
 
@@ -163,40 +162,23 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     })();
   }, [images]);
 
-  interface ReadImageReturn {
-    img: HTMLImageElement;
-    data: string | ArrayBuffer | null;
-  }
-
-  function readImage(file: File): Promise<ReadImageReturn> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader;
-
-      reader.onload = function() {
-        const img = new Image;
-
-        img.onerror = function() {
-          reject(null);
-        }
-
-        img.onload = function() {
-          resolve({
-            data: reader.result,
-            img
-          });
-        };
-
-        img.src = reader.result as string;
-      };
-
-      reader.readAsDataURL(file);
-    })  
-  }
+  // Read in the images and grab the image data and sizes
 
   useEffect(() => {
     const files = images?.filter(({ state }) => state === 'dropped');
+    const ids = files?.map(({ id }) => id);
 
     if ( !files || files.length === 0 ) return;
+
+    setImages(prev => {
+      return [...(prev || [])].map(image => {
+        const nextImage = { ...image };
+        if ( ids?.includes(nextImage.id) ) {
+          nextImage.state = 'reading';
+        }
+        return nextImage;
+      });
+    });
 
     files.forEach(async (file) => {
       const { img, data } = await readImage(file.file);
@@ -224,57 +206,6 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     });
   }, [images])
 
-  // Create smaller preview for all of the images to avoid the UI getting laggy
-  
-  useEffect(() => {
-    const files = images?.filter(({ state }) => state === 'read');
-
-    if ( !files || files.length === 0 ) return;
-
-    files.forEach(async (file) => {
-      if ( !file.img ) return;
-
-      const resizedWidth400 = 400;
-      const resizedHeight400 = (400 / file.img.width) * file.img.height;
-      const resizedWidth200 = 200;
-      const resizedHeight200 = (200 / file.img.width) * file.img.height;
-
-      const imageData = {
-        thumb200: {
-          data: resizeImage(file.img, {
-            width: resizedWidth200,
-            height: resizedHeight200
-          }),
-          width: resizedWidth200,
-          height: resizedHeight200
-        },
-        thumb400: {
-          data: resizeImage(file.img, {
-            width: resizedWidth400,
-            height: resizedHeight400
-          }),
-          width: resizedWidth400,
-          height: resizedHeight400
-        }
-      }
-
-      setImages(prev => {
-        return [...(prev || [])].map(image => {
-          let nextImage = { ...image };
-          if ( image.id === file.id ) {
-            nextImage = {
-              ...file,
-              ...imageData,
-              state: 'preview'
-            };
-          }
-          return nextImage;
-        });
-      });
-    })
-  }, [images])
-
-
   /**
    * handleOnDrop
    */
@@ -300,6 +231,10 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
       return nextImages;
     });
   }
+
+  /**
+   * handleOnDownloadAll
+   */
 
   async function handleOnDownloadAll() {
     const downloads = images?.filter(({ optimized }) => !!optimized).map(({ name, upload, optimized }) => {
