@@ -115,19 +115,22 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               avif: {
                 url: getCldImageUrl({
                   src: results.public_id,
-                  format: 'avif'
+                  format: 'avif',
+                  quality: 'auto:low'
                 }),
               },
               webp: {
                 url: getCldImageUrl({
                   src: results.public_id,
-                  format: 'webp'
+                  format: 'webp',
+                  quality: 'auto:low'
                 }),
               },
               jpg: {
                 url: getCldImageUrl({
                   src: results.public_id,
-                  format: 'jpg'
+                  format: 'jpg',
+                  quality: 'auto:low'
                 }),
               },
             };
