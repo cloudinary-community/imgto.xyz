@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
+import { toast } from 'sonner';
 
 import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
 import { readImage } from '@/lib/image';
@@ -84,7 +85,23 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
           async function startUpload() {
             const imageToUpload = upload as ImageUpload;
 
-            const results = await uploadFile(imageToUpload.file);
+            let results;
+
+            try {
+              results = await uploadFile(imageToUpload.file);
+            } catch(e) {
+              toast.error('Something went wrong, try again!')
+              setImages(prev => {
+                return [...(prev || [])].map(image => {
+                  const nextImage = { ...image };
+                  if ( image.id === imageToUpload.id ) {
+                    nextImage.state = 'error';
+                  }
+                  return nextImage;
+                });
+              });
+              return;
+            }
 
             setImages(prev => {
               return [...(prev || [])].map(image => {

@@ -34,10 +34,17 @@ export async function uploadFile(file: File) {
   formData.append('timestamp', String(timestamp));
   formData.append('signature', signature);
 
-  const results = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
     method: 'POST',
     body: formData
-  }).then(r => r.json());
+  });
+
+  if ( !response.ok ) {
+    const { error } = await response.json();
+    throw new Error(error.message || 'Uknown error');
+  }
+  
+  const results = await response.json();
 
   return results;
 }

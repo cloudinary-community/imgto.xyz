@@ -60,7 +60,7 @@ const Result = ({ image }: DownloadProps) => {
           Original Size: { image.size && formatBytes(image.size, { fixed: 0 }) }
         </p>
         <div className="mb-4">
-          <ProgressBar progress={imageProgress} />
+          <ProgressBar state={image.state} progress={imageProgress} />
           <div className="flex justify-between">
             <p className="text-xs font-bold">
               { stateMap[image.state] }
@@ -68,67 +68,74 @@ const Result = ({ image }: DownloadProps) => {
           </div>
         </div>
         <div className="flex justify-between mb-6">
-            {['finished'].includes(image.state) && (
-              <>
-                <p>
-                  <Button
-                    onClick={async () => {
-                      if ( !image?.optimized?.url || !image.upload?.format ) return;
-                      await downloadFile(image.optimized.url, image.upload.format);
-                    }}
-                  >
-                    <DownloadIcon className="w-5 h-5 text-white" />
-                    Download { image.upload?.format?.toUpperCase() }
-                  </Button>
-                  {image?.optimized?.size && (
-                    <span className="block text-sm font-semibold mt-2">Optimized Size: {formatBytes(image?.optimized?.size, { fixed: 0 }) }</span>
-                  )}
-                </p>
-                <ul>
-                  {DOWNLOAD_FORMATS
-                    .filter(format => image?.[format as keyof ImageUpload])
-                    .map(format => {
-                      const download = image[format as keyof ImageUpload] as ImageDownload;
-                      return (
-                        <li key={format} className="text-sm mb-1">
-                          <button
-                            className="text-blue-600 hover:underline"
-                            onClick={async () => {
-                              if ( !download?.url ) return;
-                              await downloadFile(download.url, format);
-                            }}
-                          >
-                            Dowload as .{ format }
-                          </button>
-                        </li>
-                      )
-                  })}
-                </ul>
-              </>
-            )}
-
-            {['dropped', 'reading', 'read', 'uploading', 'optimizing'].includes(image.state) && (
-              <>
-                <p>
-                  <Button disabled>
-                    <LoaderCircle className="w-5 h-5 text-white animate-spin" />
-                    Optimizing
-                  </Button>
-                  <span className="block text-sm font-semibold animate-pulse text-transparent bg-zinc-200 rounded mt-2">Loading Size</span>
-                </p>
-                <ul>
-                  {DOWNLOAD_FORMATS.map(format => {
+          {['finished'].includes(image.state) && (
+            <>
+              <p>
+                <Button
+                  onClick={async () => {
+                    if ( !image?.optimized?.url || !image.upload?.format ) return;
+                    await downloadFile(image.optimized.url, image.upload.format);
+                  }}
+                >
+                  <DownloadIcon className="w-5 h-5 text-white" />
+                  Download { image.upload?.format?.toUpperCase() }
+                </Button>
+                {image?.optimized?.size && (
+                  <span className="block text-sm font-semibold mt-2">Optimized Size: {formatBytes(image?.optimized?.size, { fixed: 0 }) }</span>
+                )}
+              </p>
+              <ul>
+                {DOWNLOAD_FORMATS
+                  .filter(format => image?.[format as keyof ImageUpload])
+                  .map(format => {
+                    const download = image[format as keyof ImageUpload] as ImageDownload;
                     return (
                       <li key={format} className="text-sm mb-1">
-                        <span className="animate-pulse text-transparent bg-zinc-200 rounded">
-                          Loading .{ format }
-                        </span>
+                        <button
+                          className="text-blue-600 hover:underline"
+                          onClick={async () => {
+                            if ( !download?.url ) return;
+                            await downloadFile(download.url, format);
+                          }}
+                        >
+                          Dowload as .{ format }
+                        </button>
                       </li>
                     )
-                  })}
-                </ul>
-              </>
-            )}
+                })}
+              </ul>
+            </>
+          )}
+
+          {['dropped', 'reading', 'read', 'uploading', 'optimizing'].includes(image.state) && (
+            <>
+              <p>
+                <Button disabled>
+                  <LoaderCircle className="w-5 h-5 text-white animate-spin" />
+                  Optimizing
+                </Button>
+                <span className="block text-sm font-semibold animate-pulse text-transparent bg-zinc-200 rounded mt-2">Loading Size</span>
+              </p>
+              <ul>
+                {DOWNLOAD_FORMATS.map(format => {
+                  return (
+                    <li key={format} className="text-sm mb-1">
+                      <span className="animate-pulse text-transparent bg-zinc-200 rounded">
+                        Loading .{ format }
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          )}
+          {['error'].includes(image.state) && (
+            <>
+              <p>
+                Failed to optimize image.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
