@@ -59,3 +59,27 @@ export function readImage(file: File): Promise<ReadImageReturn> {
     reader.readAsDataURL(file);
   })  
 }
+
+/**
+ * getImageFormatFromType
+ */
+
+const formatsMap: Record<string, string> = {
+  jpeg: 'JPG',
+  jpg: 'JPG',
+  avif: 'AVIF',
+  webp: 'WebP',
+}
+
+export function getImageFormatFromType(type: string, formatted = false) {
+  const split = type.split('/');
+  const format = split[split.length - 1];
+
+  if ( formatted ) return formatsMap[format];
+
+  if ( ['jpeg', 'jpg'].includes(format) ) {
+    return 'jpg';
+  }
+
+  return format;
+}

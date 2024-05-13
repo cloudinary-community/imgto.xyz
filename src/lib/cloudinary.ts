@@ -9,7 +9,7 @@ export async function uploadFile(file: File) {
   const formData = new FormData();
 
   const parameters: { [key: string]: string | Blob } = {
-    eager: 'q_auto:low'
+    eager: 'q_auto:low',
   };
 
   if ( typeof process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER === 'string' ) {

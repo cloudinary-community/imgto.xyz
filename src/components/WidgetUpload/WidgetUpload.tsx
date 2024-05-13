@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { preconnect, preload } from 'react-dom'
+
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
 import { toast } from 'sonner';
@@ -58,6 +60,14 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   if ( Array.isArray(images) && images.length > 0 ) {
     uploadContainerClassName = 'grid md:grid-cols-2 gap-10';
   }
+
+  // Establish connection with Cloudinary before requests
+
+  useEffect(() => {
+    requestIdleCallback(() => {
+      preconnect('https://res.cloudinary.com');
+    });
+  }, []);
 
   // Upload all of the images
 
@@ -123,6 +133,24 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             const optimizedData = await getFileBlob(optimizedUrl);
             const optimizedSize = optimizedData.size;
 
+            const avifUrl = getCldImageUrl({
+              src: results.public_id,
+              format: 'avif',
+              quality: 'auto:low'
+            });
+
+            const webpUrl = getCldImageUrl({
+              src: results.public_id,
+              format: 'webp',
+              quality: 'auto:low'
+            });
+
+            const jpgUrl = getCldImageUrl({
+              src: results.public_id,
+              format: 'jpg',
+              quality: 'auto:low'
+            })
+
             const formats: Record<string, string | object> = {
               optimized: {
                 url: optimizedUrl,
@@ -130,25 +158,13 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 size: optimizedSize
               },
               avif: {
-                url: getCldImageUrl({
-                  src: results.public_id,
-                  format: 'avif',
-                  quality: 'auto:low'
-                }),
+                url: avifUrl,
               },
               webp: {
-                url: getCldImageUrl({
-                  src: results.public_id,
-                  format: 'webp',
-                  quality: 'auto:low'
-                }),
+                url: webpUrl,
               },
               jpg: {
-                url: getCldImageUrl({
-                  src: results.public_id,
-                  format: 'jpg',
-                  quality: 'auto:low'
-                }),
+                url: jpgUrl,
               },
             };
 
@@ -162,6 +178,26 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 return nextImage;
               });
             });
+
+            // preload(optimizedUrl, {
+            //   as: 'image',
+            //   type: imageToUpload.file.type
+            // });
+
+            // preload(avifUrl, {
+            //   as: 'image',
+            //   type: 'image/avif'
+            // });
+
+            // preload(webpUrl, {
+            //   as: 'image',
+            //   type: 'image/webp'
+            // });
+
+            // preload(jpgUrl, {
+            //   as: 'image',
+            //   type: 'image/jpeg'
+            // });
 
             return {
               ...imageToUpload,
@@ -287,12 +323,12 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 return (
                   <li key={image.id} className="p-1 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
                     <a href={`#${image.id}`} className="block aspect-square relative">
-                      {(image.data || image.thumb400 ) && (
+                      {image.data && (
                         <img
                           className="block aspect-square object-cover rounded relative z-10"
-                          width={image.thumb400?.width || image.width}
-                          height={image.thumb400?.height || image.height}
-                          src={(image.thumb400?.data || image.data) as string }
+                          width={image.width}
+                          height={image.height}
+                          src={image.data as string}
                           alt="Upload preview"
                         />
                       )}
