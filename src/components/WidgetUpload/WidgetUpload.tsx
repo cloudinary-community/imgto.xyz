@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { preconnect, preload } from 'react-dom'
+import { preconnect } from 'react-dom'
+import { Check, LoaderCircle } from 'lucide-react';
 
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
@@ -16,6 +17,7 @@ import Dropzone from '@/components/Dropzone';
 import ProgressBar from '@/components/ProgressBar';
 import Button from '@/components/Button';
 import Result from '@/components/Result';
+
 
 const MAX_IMAGES = 20;
 const MAX_SIZE = 10; // MB
@@ -35,12 +37,16 @@ interface WidgetUploadProps {
 
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const [images, setImages] = useState<Array<ImageUpload> | null>(null);
+  const [archiveState, setArchiveState] = useState('ready');
 
   const imageStates = images?.map(({ state }) => state);
   const uploadingCount = imageStates?.filter(state => state === 'uploading').length;
+  const optimizingCount = imageStates?.filter(state => state === 'optimizing').length;
   const finishedCount = imageStates?.filter(state => state === 'finished').length;
   const totalCount = Array.isArray(images) ? images.length : 0;
 
+  const isUploading = typeof uploadingCount === 'number' && uploadingCount > 0;
+  const isOptimizing = typeof optimizingCount === 'number' && optimizingCount > 0;
   const isUploadComplete = totalCount === finishedCount;
   const isDisabled = !!totalCount && totalCount >= MAX_IMAGES;
 
@@ -51,8 +57,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
 
   if ( finishedCount === totalCount ) {
     globalState = 'finished'
-  } else if ( typeof uploadingCount === 'number' && uploadingCount > 0 ) {
-    globalState = 'uploading';
+  } else if ( isUploading || isOptimizing ) {
+    globalState = 'optimizing';
   }
 
   let uploadContainerClassName = '';
@@ -287,6 +293,10 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
    */
 
   async function handleOnDownloadAll() {
+    if ( archiveState !== 'ready' ) return;
+
+    setArchiveState('archiving');
+
     const downloads = images?.filter(({ optimized }) => !!optimized).map(({ name, upload, optimized }) => {
       return {
         name,
@@ -294,7 +304,14 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
         url: optimized?.url
       }
     });
+    
     await downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');
+
+    setArchiveState('finished');
+
+    setTimeout(() => {
+      setArchiveState('ready');
+    }, 2000)
   }
 
   return (
@@ -356,9 +373,17 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 <div>
                   <p className="mb-2">
                     <Button onClick={handleOnDownloadAll}>
-                      <svg className="fill-white w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
-                        <path d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 219.8 0 273.2 0 336c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4zm-132.9 88.7L299.3 420.7c-6.2 6.2-16.4 6.2-22.6 0L171.3 315.3c-10.1-10.1-2.9-27.3 11.3-27.3H248V176c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16v112h65.4c14.2 0 21.4 17.2 11.3 27.3z"></path>
-                      </svg>
+                      { archiveState === 'archiving' && (
+                        <LoaderCircle className="text-white w-5 h-5 animate-spin" />
+                      )}
+                      {archiveState === 'ready' && (
+                        <svg className="fill-white w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+                          <path d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 219.8 0 273.2 0 336c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4zm-132.9 88.7L299.3 420.7c-6.2 6.2-16.4 6.2-22.6 0L171.3 315.3c-10.1-10.1-2.9-27.3 11.3-27.3H248V176c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16v112h65.4c14.2 0 21.4 17.2 11.3 27.3z"></path>
+                        </svg>
+                      )}
+                      {archiveState === 'finished' && (
+                        <Check className="text-white w-5 h-5" />
+                      )}
                       Download All
                     </Button>
                   </p>
@@ -372,7 +397,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
         )}
       </div>
       {Array.isArray(images) && (
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full max-w-xl mx-auto">
           <ul>
             {images.map((image) => {
               return (
