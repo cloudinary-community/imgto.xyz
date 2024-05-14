@@ -8,12 +8,9 @@ interface DownloadButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 const DownloadButton = ({ children, url, filename = 'file', onClick, ...rest }: DownloadButtonProps) => {
   const [progress, setProgress] = useState<number>(0);
 
-  console.log('progress', progress)
-
   async function handleOnClick(event: MouseEvent<HTMLButtonElement>) {
-    console.log('start')
     const response = await fetch(url);
-console.log('response', response)
+
     if ( !response?.body ) return;
 
     const contentLength = response.headers.get('Content-Length');
@@ -35,7 +32,6 @@ console.log('response', response)
 
       if ( typeof totalLength === 'number' ) {
         const step = receivedLength / totalLength * 100;
-        console.log('step', step)
         setProgress(step);
       }
     }
