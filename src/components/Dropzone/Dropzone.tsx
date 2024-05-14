@@ -34,7 +34,7 @@ const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize 
     disabled
   });
 
-  let dropzoneStyles = 'w-full text-center bg-white dark:bg-zinc-900 px-6 py-12 rounded-lg';
+  let dropzoneStyles = 'w-full text-center bg-white dark:bg-zinc-900 rounded-lg';
 
   if ( isDragActive && !disabled ) {
     dropzoneStyles = `${dropzoneStyles} relative shadow-blue-400/60 before:content-["_"] before:block before:w-full before:h-full before:bg-blue-500 before:blur-lg dark:before:blur-xl before:opacity-60 before:absolute before:top-0 before:right-0 before:z-[-1] before:animate-faderight before:bg-[length:400%] before:bg-gradient-to-r before:from-blue-500 dark:before:from-blue-400 before:from-[10%] before:via-purple-600 dark:before:via-purple-500 before:to-blue-500 dark:before:to-blue-400 before:to-[90%]`;
@@ -48,7 +48,7 @@ const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize 
     <div className={cn(dropzoneStyles, className)}>
       <div className="z-0">
         {!disabled && (
-          <div {...getRootProps()}>
+          <div {...getRootProps()} className="px-6 py-12">
             <input {...getInputProps()} />
             <p>
               <svg className="w-full max-w-[6em] fill-zinc-400 dark:fill-zinc-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
