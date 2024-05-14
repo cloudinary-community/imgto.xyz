@@ -17,7 +17,7 @@ interface DownloadProps {
 }
 
 const Result = ({ image }: DownloadProps) => {
-  const asButtonRef = useRef<HTMLButtonElement | null>(null);
+  const asButtonContainerRef = useRef<HTMLDivElement | null>(null);
   const [asDropdownOpen, setAsDropdownOpen] = useState(false);
   
   const downloadName = image.upload?.original_filename;
@@ -29,7 +29,7 @@ const Result = ({ image }: DownloadProps) => {
   }
 
   function handleDocumentOnClick(event: MouseEvent) {
-    if ( asButtonRef.current && !event.composedPath().includes(asButtonRef.current) ) {
+    if ( asButtonContainerRef.current && !event.composedPath().includes(asButtonContainerRef.current) ) {
       setAsDropdownOpen(false);
     }
   }
@@ -69,17 +69,18 @@ const Result = ({ image }: DownloadProps) => {
           <span>{ image.size && formatBytes(image.size, { fixed: 0 }) }</span>
 
           { image?.optimized?.size && (
-            <>
+            <span className="flex items-center gap-2 h-6">
               <ArrowRight className="w-4 h-4 text-green-700" />
               <span className="font-bold text-green-600">
                 {formatBytes(image?.optimized?.size, { fixed: 0 }) }
               </span>
-            </>
+            </span>
           )}
 
           { !image?.optimized?.size && (
-            <span className="animate-pulse text-transparent bg-zinc-200 rounded">
-              Calculating
+            <span className="flex items-center gap-2 h-6">
+              <ArrowRight className="w-4 h-4 text-green-700" />
+              <LoaderCircle className="w-4 h-4 animate-spin text-zinc-400" />
             </span>
           )}
         </p>
@@ -97,9 +98,8 @@ const Result = ({ image }: DownloadProps) => {
                   Download
                 </Button>
 
-                <div className="flex items-center relative">
+                <div ref={asButtonContainerRef} className="flex items-center relative">
                   <Button
-                    ref={asButtonRef}
                     className="bg-white hover:bg-white active:bg-white text-zinc-500 hover:text-zinc-400 border-2 border-zinc-400"
                     onClick={() => setAsDropdownOpen(!asDropdownOpen)}
                     size="xs"
@@ -116,7 +116,7 @@ const Result = ({ image }: DownloadProps) => {
                           return (
                             <li key={format} className="font-semibold mb-1">
                               <DownloadButton
-                                className="block text-zinc-800 hover:text-zinc-500 px-2 py-1"
+                                className="text-zinc-800 hover:text-zinc-500 px-2 py-1"
                                 url={download?.url || ''}
                                 filename={`${downloadName}.${format}`}
                                 title={`Dowload as .${ format }`}

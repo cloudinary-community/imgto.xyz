@@ -1,56 +1,25 @@
+import { Download, LoaderCircle } from 'lucide-react';
 import { MouseEvent, useState } from 'react';
+
+import { cn, downloadUrl } from '@/lib/util';
 
 interface DownloadButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   filename?: string;
   url: string;
+  className?: string;
 }
 
-const DownloadButton = ({ children, url, filename = 'file', onClick, ...rest }: DownloadButtonProps) => {
-  const [progress, setProgress] = useState<number>(0);
+const DownloadButton = ({ children, url, filename = 'file', onClick, className, ...rest }: DownloadButtonProps) => {
+  const [isDownloading, setIsDownloading] = useState(false);
 
   async function handleOnClick(event: MouseEvent<HTMLButtonElement>) {
-    const response = await fetch(url);
+    if ( isDownloading ) return;
 
-    if ( !response?.body ) return;
-
-    const contentLength = response.headers.get('Content-Length');
-    const totalLength = typeof contentLength === 'string' && parseInt(contentLength)
-
-    const reader = response.body.getReader();
-    const chunks = [];
-
-    let receivedLength = 0;
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if ( done ) break;
-
-      chunks.push(value);
-
-      receivedLength = receivedLength + value.length;
-
-      if ( typeof totalLength === 'number' ) {
-        const step = receivedLength / totalLength * 100;
-        setProgress(step);
-      }
-    }
+    setIsDownloading(true);
     
-    const blob = new Blob(chunks);
-    const blobUrl = URL.createObjectURL(blob);
+    await downloadUrl(url, filename, { downloadBlob: true });
 
-    const a = document.createElement('a');
-
-    a.href = blobUrl;
-    a.download = filename;
-
-    function handleOnClick() {
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 150);
-      removeEventListener('click', handleOnClick);
-    };
-  
-    a.addEventListener('click', handleOnClick, false);
-    a.click();
+    setIsDownloading(false);
 
     if ( typeof onClick === 'function' ) {
       onClick(event);
@@ -58,10 +27,16 @@ const DownloadButton = ({ children, url, filename = 'file', onClick, ...rest }: 
   }
 
   return (
-    <button {...rest} onClick={handleOnClick}>
-      { progress > 0 && progress < 100 && (
-        <>loading</>
+    <button
+      {...rest}
+      onClick={handleOnClick}
+      className={cn(
+        'flex items-center gap-2',
+        className
       )}
+    >
+      { !isDownloading && <Download className="w-4 h-4" /> }
+      { isDownloading && <LoaderCircle className="w-4 h-4 animate-spin" /> }
       { children }
     </button>
   )
