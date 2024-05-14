@@ -69,11 +69,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
 
   // Establish connection with Cloudinary before requests
 
-  useEffect(() => {
-    requestIdleCallback(() => {
-      preconnect('https://res.cloudinary.com');
-    });
-  }, []);
+  useEffect(() => preconnect('https://res.cloudinary.com'), []);
 
   // Upload all of the images
 
