@@ -15,6 +15,7 @@ export interface ImageUpload {
   jpeg?: ImageDownload;
   width?: number;
   height?: number;
+  errors?: boolean | string | Array<string>;
 }
 
 export interface ImageDownload {

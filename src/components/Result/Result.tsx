@@ -23,6 +23,8 @@ const Result = ({ image }: DownloadProps) => {
   const downloadName = image.upload?.original_filename;
   const formatFormatted = getImageFormatFromType(image.file.type, true);
 
+  const hasError = image.state === 'error' || image.errors;
+
   async function downloadFile(url: string, format: string) {
     if ( typeof image?.optimized?.url !== 'string' ) return;
     await downloadUrl(url, `${downloadName}.${format}`, { downloadBlob: true });
@@ -42,7 +44,7 @@ const Result = ({ image }: DownloadProps) => {
   }, []);
 
   return (
-    <div className="flex w-full items-center gap-10 mb-10">
+    <div className="flex w-full gap-10 mb-10">
       <span className="relative w-32 self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
         {image.data && (
           <img
@@ -56,7 +58,7 @@ const Result = ({ image }: DownloadProps) => {
         )}
         <span className={`block absolute top-0 left-0 z-0 w-full rounded aspect-square bg-zinc-300 animate-pulse`} />
       </span>
-      <div className="grid grow">
+      <div>
         <h3 className="font-bold truncate mb-1">
           { image.name }
         </h3>
@@ -68,7 +70,7 @@ const Result = ({ image }: DownloadProps) => {
 
           <span>{ image.size && formatBytes(image.size, { fixed: 0 }) }</span>
 
-          { image?.optimized?.size && (
+          { !hasError && image?.optimized?.size && (
             <span className="flex items-center gap-2 h-6">
               <ArrowRight className="w-4 h-4 text-green-700" />
               <span className="font-bold text-green-600">
@@ -77,13 +79,14 @@ const Result = ({ image }: DownloadProps) => {
             </span>
           )}
 
-          { !image?.optimized?.size && (
+          { !hasError && !image?.optimized?.size && (
             <span className="flex items-center gap-2 h-6">
               <ArrowRight className="w-4 h-4 text-green-700" />
               <LoaderCircle className="w-4 h-4 animate-spin text-zinc-400" />
             </span>
           )}
         </p>
+        
         <div className="flex justify-between mb-6">
           {['finished'].includes(image.state) && (
             <>
@@ -133,7 +136,7 @@ const Result = ({ image }: DownloadProps) => {
             </>
           )}
 
-          {['dropped', 'reading', 'read', 'uploading', 'optimizing'].includes(image.state) && (
+          {!hasError && ['dropped', 'reading', 'read', 'uploading', 'optimizing'].includes(image.state) && (
             <div className="flex gap-4">
               <Button disabled>
                 <LoaderCircle className="w-5 h-5 text-white animate-spin" />
@@ -142,11 +145,22 @@ const Result = ({ image }: DownloadProps) => {
             </div>
           )}
 
-          {['error'].includes(image.state) && (
+          {hasError && (
             <>
-              <p>
-                Failed to optimize image.
-              </p>
+              {Array.isArray(image.errors) && (
+                <ul className="grid gap-1">
+                  {image.errors.map((reason, index) => {
+                    return (
+                      <li key={index} className="text-sm text-red-700 bg-red-100 border-red-400 px-2 py-1 rounded">{ reason }</li>
+                    );
+                  })}
+                </ul>
+              )}
+              {!Array.isArray(image.errors) && (
+                <p>
+                  Failed to optimize image.
+                </p>
+              )}
             </>
           )}
         </div>

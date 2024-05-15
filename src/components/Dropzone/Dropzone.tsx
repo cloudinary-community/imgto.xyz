@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { DropEvent, FileRejection, useDropzone } from 'react-dropzone';
 
 import { cn } from '@/lib/util';
 import Button from '../Button';
@@ -15,9 +15,9 @@ interface DropzoneProps {
 }
 
 const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize = 0 }: DropzoneProps) => {
-  const handleOnDrop = useCallback((acceptedFiles: Array<File>) => {
+  const handleOnDrop = useCallback((acceptedFiles: Array<File>, rejectedFiles: Array<FileRejection>, event: DropEvent) => {
     if ( typeof onDrop === 'function' ) {
-      onDrop(acceptedFiles)
+      onDrop(acceptedFiles, rejectedFiles, event)
     }
   }, [])
   

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { preconnect } from 'react-dom'
 import { Check, LoaderCircle } from 'lucide-react';
+import { FileRejection } from 'react-dropzone';
 
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
@@ -18,7 +19,6 @@ import ProgressBar from '@/components/ProgressBar';
 import Button from '@/components/Button';
 import Result from '@/components/Result';
 
-
 const MAX_IMAGES = 20;
 const MAX_SIZE = 10; // MB
 
@@ -33,16 +33,15 @@ interface WidgetUploadProps {
   className?: string;
 }
 
-
-
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const [images, setImages] = useState<Array<ImageUpload> | null>(null);
   const [archiveState, setArchiveState] = useState('ready');
 
   const imageStates = images?.map(({ state }) => state);
-  const uploadingCount = imageStates?.filter(state => state === 'uploading').length;
-  const optimizingCount = imageStates?.filter(state => state === 'optimizing').length;
-  const finishedCount = imageStates?.filter(state => state === 'finished').length;
+  const uploadingCount = imageStates?.filter(state => state === 'uploading').length || 0;
+  const optimizingCount = imageStates?.filter(state => state === 'optimizing').length || 0;
+  const errorCount = imageStates?.filter(state => state === 'error').length || 0;
+  const finishedCount = (imageStates?.filter(state => state === 'finished').length || 0) + errorCount;
   const totalCount = Array.isArray(images) ? images.length : 0;
 
   const isUploading = typeof uploadingCount === 'number' && uploadingCount > 0;
@@ -74,7 +73,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   // Upload all of the images
 
   useEffect(() => {
-    const filesToUpload = images?.filter(({ state }) => state === 'read');
+    const filesToUpload = images?.filter(({ state }) => state === 'read' );
     const ids = filesToUpload?.map(({ id }) => id);
 
     if ( !Array.isArray(filesToUpload) || filesToUpload.length === 0 ) return;
@@ -181,26 +180,6 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               });
             });
 
-            // preload(optimizedUrl, {
-            //   as: 'image',
-            //   type: imageToUpload.file.type
-            // });
-
-            // preload(avifUrl, {
-            //   as: 'image',
-            //   type: 'image/avif'
-            // });
-
-            // preload(webpUrl, {
-            //   as: 'image',
-            //   type: 'image/webp'
-            // });
-
-            // preload(jpgUrl, {
-            //   as: 'image',
-            //   type: 'image/jpeg'
-            // });
-
             return {
               ...imageToUpload,
               upload
@@ -240,7 +219,9 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
         data,
         width: img.width,
         height: img.height,
-        state: 'read'
+        // Now that it's read, put it in an error state
+        // to update the UI
+        state: file.errors ? 'error' : 'read'
       }
 
       setImages(prev => {
@@ -262,18 +243,32 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
    * handleOnDrop
    */
 
-  async function handleOnDrop(acceptedFiles: Array<File>) {
+  async function handleOnDrop(acceptedFiles: Array<File>, rejectedFiles: Array<FileRejection>) {
     const dropDate = Date.now();
 
-    const files = acceptedFiles.map(acceptedFile => {
-      return {
-        id: `${dropDate}-${acceptedFile.name}`,
-        name: acceptedFile.name,
-        size: acceptedFile.size,
-        file: acceptedFile,
-        state: 'dropped'
-      }
-    })
+    const files = [
+      ...acceptedFiles.map(acceptedFile => {
+        return {
+          id: `${dropDate}-${acceptedFile.name}`,
+          name: acceptedFile.name,
+          size: acceptedFile.size,
+          file: acceptedFile,
+          state: 'dropped',
+        }
+      }),
+      ...rejectedFiles.map(({ file: rejectedFile, errors }) => {
+        return {
+          id: `${dropDate}-${rejectedFile.name}`,
+          name: rejectedFile.name,
+          size: rejectedFile.size,
+          file: rejectedFile,
+          // Don't yet put it in an error state so that we can allow the image
+          // to be read into the document
+          state: 'dropped',
+          errors: errors?.map(({ message }) => message) || true
+        }
+      }),
+    ];
 
     setImages(prev => {
       const nextImages = [

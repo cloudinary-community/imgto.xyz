@@ -65,9 +65,10 @@ export function readImage(file: File): Promise<ReadImageReturn> {
  */
 
 const formatsMap: Record<string, string> = {
-  jpeg: 'JPG',
-  jpg: 'JPG',
   avif: 'AVIF',
+  jpg: 'JPG',
+  jpeg: 'JPG',
+  png: 'PNG',
   webp: 'WebP',
 }
 
@@ -75,7 +76,7 @@ export function getImageFormatFromType(type: string, formatted = false) {
   const split = type.split('/');
   const format = split[split.length - 1];
 
-  if ( formatted ) return formatsMap[format];
+  if ( formatted ) return formatsMap[format] || format;
 
   if ( ['jpeg', 'jpg'].includes(format) ) {
     return 'jpg';
