@@ -54,6 +54,7 @@ const Result = ({ image }: DownloadProps) => {
             src={image.data as string }
             alt="Upload preview"
             loading="lazy"
+            decoding="async"
           />
         )}
         <span className={`block absolute top-0 left-0 z-0 w-full rounded aspect-square bg-zinc-300 animate-pulse`} />

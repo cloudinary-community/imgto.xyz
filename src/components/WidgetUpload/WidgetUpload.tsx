@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { preconnect } from 'react-dom'
-import { Check, LoaderCircle } from 'lucide-react';
+import { Check, DownloadIcon, LoaderCircle } from 'lucide-react';
 import { FileRejection } from 'react-dropzone';
 
 import { getCldImageUrl } from 'next-cloudinary';
@@ -48,6 +48,9 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const isOptimizing = typeof optimizingCount === 'number' && optimizingCount > 0;
   const isUploadComplete = totalCount === finishedCount;
   const isDisabled = !!totalCount && totalCount >= MAX_IMAGES;
+
+  const isFinished = totalCount === finishedCount + errorCount;
+  const hasDownloadsAvailable = typeof finishedCount === 'number' && finishedCount > 0;
 
   const totalSizeOriginal = images && addNumbers(images.map(({ size }) => size));
   const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ optimized }) => optimized?.size || 0));
@@ -338,6 +341,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                           height={image.height}
                           src={image.data as string}
                           alt="Upload preview"
+                          decoding="async"
+                          loading="lazy"
                         />
                       )}
                       <span className={`block absolute top-0 left-0 z-0 w-full aspect-square rounded bg-zinc-200 animate-pulse`} />
@@ -359,8 +364,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 </p>
               </div>
             </div>
-            <div className="flex justify-between mb-6">
-              {globalState === 'finished' && (
+            {globalState === 'finished' && hasDownloadsAvailable && (
+              <div className="flex justify-between mb-6">
                 <div>
                   <p className="mb-2">
                     <Button onClick={handleOnDownloadAll}>
@@ -368,9 +373,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                         <LoaderCircle className="text-white w-5 h-5 animate-spin" />
                       )}
                       {archiveState === 'ready' && (
-                        <svg className="fill-white w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
-                          <path d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 219.8 0 273.2 0 336c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4zm-132.9 88.7L299.3 420.7c-6.2 6.2-16.4 6.2-22.6 0L171.3 315.3c-10.1-10.1-2.9-27.3 11.3-27.3H248V176c0-8.8 7.2-16 16-16h48c8.8 0 16 7.2 16 16v112h65.4c14.2 0 21.4 17.2 11.3 27.3z"></path>
-                        </svg>
+                        <DownloadIcon className="w-5 h-5 text-white" />
                       )}
                       {archiveState === 'finished' && (
                         <Check className="text-white w-5 h-5" />
@@ -382,8 +385,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                     Total Optimized: { totalSizeOptimized && formatBytes(totalSizeOptimized, { fixed: 0 }) }
                   </p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </section>
         )}
       </div>
