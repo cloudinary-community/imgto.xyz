@@ -18,16 +18,19 @@ const CLOUD_CONFIGS = [
 
     const moderations = await getAllModerations();
 
+    console.log('moderations', moderations.map(({ public_id }) => public_id).join(', '))
+
     const expiredAssets = moderations.filter(({ public_id, created_at }) => {
       console.log('public_id', public_id);
       console.log('new Date().getTime()', new Date(), new Date().getTime());
       console.log('new Date(created_at).getTime()', new Date(created_at), new Date(created_at).getTime());
       const timeSinceCreated = new Date().getTime() - new Date(created_at).getTime();
       // If the asset is older than 5 minutes, we want to delete it
+      console.log('expired', timeSinceCreated / 1000 / 60 > 5)
       return timeSinceCreated / 1000 / 60 > 5;
     });
 
-    console.log('expiredAssets', expiredAssets.map(({ public_id }) => public_id)).join(', ')
+    console.log('expiredAssets', expiredAssets.map(({ public_id }) => public_id).join(', '))
 
     // await deleteModerations(moderations);
 
