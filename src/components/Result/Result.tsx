@@ -19,7 +19,7 @@ interface DownloadProps {
 const Result = ({ image }: DownloadProps) => {
   const asButtonContainerRef = useRef<HTMLDivElement | null>(null);
   const [asDropdownOpen, setAsDropdownOpen] = useState(false);
-  
+
   const downloadName = image.upload?.original_filename;
   const formatFormatted = getImageFormatFromType(image.file.type, true);
 
@@ -44,8 +44,8 @@ const Result = ({ image }: DownloadProps) => {
   }, []);
 
   return (
-    <div className="flex w-full gap-10 mb-10">
-      <span className="relative w-32 self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
+    <div className="flex w-full gap-4 sm:gap-10 mb-10">
+      <span className="relative w-24 sm:w-32 self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
         {image.data && (
           <img
             className="block rounded relative z-10 aspect-square object-cover"
@@ -59,17 +59,19 @@ const Result = ({ image }: DownloadProps) => {
         )}
         <span className={`block absolute top-0 left-0 z-0 w-full rounded aspect-square bg-zinc-300 animate-pulse`} />
       </span>
-      <div>
+      <div className="grid -mt-1 sm:mt-0">
         <h3 className="font-bold truncate mb-1">
           { image.name }
         </h3>
-        <p className="flex gap-2 items-center text-lg mb-4">
+        <p className="flex flex-col xs:flex-row gap-2 xs:gap-2 xs:items-center sm:text-lg mb-4">
 
-          <span className="text-purple-700 font-semibold bg-purple-100 border border-purple-400 rounded text-xs px-[.4em] py-[.2em] mr-1">
-            { formatFormatted }
+          <span className="flex items-center gap-2">
+            <span className="text-purple-700 font-semibold bg-purple-100 border border-purple-400 rounded text-xs px-[.4em] py-[.2em] mr-1">
+              { formatFormatted }
+            </span>
+
+            <span>{ image.size && formatBytes(image.size, { fixed: 0 }) }</span>
           </span>
-
-          <span>{ image.size && formatBytes(image.size, { fixed: 0 }) }</span>
 
           { !hasError && image?.optimized?.size && (
             <span className="flex items-center gap-2 h-6">
@@ -80,6 +82,7 @@ const Result = ({ image }: DownloadProps) => {
             </span>
           )}
 
+
           { !hasError && !image?.optimized?.size && (
             <span className="flex items-center gap-2 h-6">
               <ArrowRight className="w-4 h-4 text-green-700" />
@@ -87,11 +90,11 @@ const Result = ({ image }: DownloadProps) => {
             </span>
           )}
         </p>
-        
+
         <div className="flex justify-between mb-6">
           {['finished'].includes(image.state) && (
             <>
-              <div className="flex gap-4">
+              <div className="flex gap-2 sm:gap-4 flex-col xs:flex-row">
                 <Button
                   onClick={async () => {
                     if ( !image?.optimized?.url || !image.upload?.format ) return;

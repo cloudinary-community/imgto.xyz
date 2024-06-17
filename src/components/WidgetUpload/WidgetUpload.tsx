@@ -298,7 +298,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
         url: optimized?.url
       }
     });
-    
+
     await downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');
 
     setArchiveState('finished');
