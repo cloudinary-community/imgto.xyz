@@ -21,22 +21,12 @@ const CLOUD_CONFIGS = [
     console.log('moderations', moderations.map(({ public_id }) => public_id).join(', '))
 
     const expiredAssets = moderations.filter(({ public_id, created_at }) => {
-      console.log('public_id', public_id);
-      console.log('new Date().getTime()', new Date(), new Date().getTime());
-      console.log('new Date(created_at).getTime()', new Date(created_at), new Date(created_at).getTime());
       const timeSinceCreated = new Date().getTime() - new Date(created_at).getTime();
       // If the asset is older than 5 minutes, we want to delete it
-      console.log('expired', timeSinceCreated / 1000 / 60 > 5)
       return timeSinceCreated / 1000 / 60 > 5;
     });
 
-    console.log('expiredAssets', expiredAssets.map(({ public_id }) => public_id).join(', '))
-
-    // await deleteModerations(moderations);
-
-    if ( Array.isArray(config.directoriesToClear) ) {
-      // await clearDirectoriesByPrefixes(config.directoriesToClear);
-    }
+    await deleteModerations(expiredAssets);
 
     console.log(`---- End ${config.cloud_name} ----`);
   }
@@ -102,29 +92,5 @@ async function deleteModerations(moderations) {
     }));
   } catch(e) {
     console.log(`Failed to delete all moderations: ${e.message}`);
-  }
-}
-
-/**
- * clearDirectoriesByPrefix
- */
-
-async function clearDirectoriesByPrefixes(prefixes = []) {
-  const prefixesLength = prefixes.length;
-
-  if ( prefixesLength === 0 ) {
-    console.log('No directories to clear...');
-    return;
-  }
-
-  console.log(`Clearing ${prefixesLength} directories...`);
-
-  try {
-    for ( let i = 0; i < prefixesLength; i++ ) {
-      const prefix = prefixes[i];
-      await cloudinary.api.delete_resources_by_prefix(prefix);
-    }
-  } catch(e) {
-    console.log(`Failed to clear all directories: ${e.message}`);
   }
 }
