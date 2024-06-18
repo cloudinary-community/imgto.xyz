@@ -1,3 +1,5 @@
+"use client";
+
 import { ReactNode, forwardRef } from 'react';
 
 import { cn } from '@/lib/util';
@@ -21,6 +23,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ children, className
 
   if ( size === 'xs' ) {
     sizeClassName = 'text-xs py-2 px-4';
+  } else if ( size === 'lg' ) {
+    sizeClassName = 'text-lg py-3 px-5';
   }
 
   function handleOnClick(event: React.MouseEvent<HTMLElement>) {

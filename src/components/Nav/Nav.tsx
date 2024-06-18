@@ -22,13 +22,13 @@ const Nav = () => {
             </svg>
           </Link>
         </p>
-        <ul className="flex m-0">
-          <li className="mr-6">
+        <ul className="flex gap-2 xs:gap-6 flex-col xs:flex-row items-center justify-center m-0">
+          <li>
             <Link href="/how-to-use" className="text-zinc-600 dark:text-zinc-300 text-inherit">
               How to Use
             </Link>
           </li>
-          <li className="mr-6">
+          <li>
             <Link href="/developer-api" className="text-zinc-600 dark:text-zinc-300 text-inherit">
               Developer API
             </Link>
