@@ -28,7 +28,7 @@ const CldImage = (props: CldImageProps) => {
   
   const dataUrl = `data:image/svg+xml;base64,${toBase64(shimmer(width, height))}`;
 
-  return <CldImageDefault {...props} placeholder={dataUrl as PlaceholderValue} />
+  return <CldImageDefault placeholder={dataUrl as PlaceholderValue} {...props} />
 }
 
 export default CldImage;

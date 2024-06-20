@@ -37,6 +37,7 @@ export default function Home() {
                   height="92"
                   alt="Cloudinary logo"
                   format="svg"
+                  placeholder="empty"
                 />
               </a>
             </p>
