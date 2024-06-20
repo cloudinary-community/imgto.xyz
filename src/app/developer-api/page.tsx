@@ -1,13 +1,14 @@
 import Section from '@/components/Section';
 import Container from '@/components/Container';
 import PageTitle from '@/components/PageTitle';
+import CldImage from '@/components/CldImage';
 
 export default function Home() {
   return (
     <div className="mt-4 md:mt-14">
       <Section>
         <Container>
-          <article className="prose-xl">
+          <article className="prose-xl grid">
             <PageTitle>Developer API</PageTitle>
             
             <p>
@@ -27,7 +28,20 @@ export default function Home() {
               an <a href="https://cloudinary.com/products/digital_asset_management?utm_source=imgto.xyz&utm_medium=referral&utm_campaign=devx_imgtoxyz&utm_content=developerapi_dam">industry-leading DAM</a> (Digital Asset Manager).
             </p>
 
-            <h2 className="text-2xl md:text-3xl font-bold mb-12">How it Works</h2>
+            <p>
+              <a href="https://cloudinary.com?utm_source=imgto.xyz&utm_medium=referral&utm_campaign=devx_imgtoxyz&utm_content=developerapi_logo">
+                <CldImage
+                  className="w-full max-w-xs"
+                  src="assets/cloudinary-blue_mtkkjm"
+                  width="468"
+                  height="92"
+                  alt="Cloudinary logo"
+                  format="svg"
+                />
+              </a>
+            </p>
+
+            <h2 className="text-2xl md:text-3xl font-bold mt-16 mb-12">How it Works</h2>
 
             <p>
               imgto.xyz uses <a href="https://cloudinary.com/?utm_source=imgto.xyz&utm_medium=referral&utm_campaign=devx_imgtoxyz&utm_content=howitworks">Cloudinary&apos;s image and video API</a> to
@@ -39,8 +53,8 @@ export default function Home() {
               to optimize it:
             </p>
 
-            <pre className="overflow-hidden bg-zinc-100">
-              <code className="overflow-x-scroll">{`https://res.cloudinary.com/<Cloud Name>/image/upload/q_auto/<Public ID>`}</code>
+            <pre className="overflow-x-scroll bg-zinc-100">
+              <code>{`https://res.cloudinary.com/<Cloud Name>/image/upload/q_auto/<Public ID>`}</code>
             </pre>
 
             <blockquote className="text-[.85em] border-l-4 border-l-blue-500">
@@ -51,8 +65,8 @@ export default function Home() {
               Converting the image to a new format is just as simple, using the <code className="bg-zinc-100 p-2 rounded">{`f_<format>`}</code> transformation, such as:
             </p>
 
-            <pre className="overflow-hidden bg-zinc-100">
-              <code className="overflow-x-scroll">{`https://res.cloudinary.com/<Cloud Name>/image/upload/f_avif/<Public ID>`}</code>
+            <pre className="overflow-x-scroll bg-zinc-100">
+              <code>{`https://res.cloudinary.com/<Cloud Name>/image/upload/f_avif/<Public ID>`}</code>
             </pre>
 
             <p>
