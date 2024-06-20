@@ -8,7 +8,7 @@ export default function Home() {
     <div className="mt-4 md:mt-14">
       <Section>
         <Container>
-          <article className="prose-xl grid">
+          <article className="prose-xl grid prose-p:mt-0 prose-pre:mt-0 prose-blockquote:mt-0">
             <PageTitle>Developer API</PageTitle>
             
             <p>
@@ -41,7 +41,7 @@ export default function Home() {
               </a>
             </p>
 
-            <h2 className="text-2xl md:text-3xl font-bold mt-16 mb-12">How it Works</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mt-4 mb-12">How it Works</h2>
 
             <p>
               imgto.xyz uses <a href="https://cloudinary.com/?utm_source=imgto.xyz&utm_medium=referral&utm_campaign=devx_imgtoxyz&utm_content=howitworks">Cloudinary&apos;s image and video API</a> to
