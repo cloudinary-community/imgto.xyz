@@ -48,9 +48,22 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const isOptimizing = typeof optimizingCount === 'number' && optimizingCount > 0;
   const isUploadComplete = totalCount === finishedCount;
   const isDisabled = !!totalCount && totalCount >= MAX_IMAGES;
-
   const isFinished = totalCount === finishedCount + errorCount;
+
   const hasDownloadsAvailable = typeof finishedCount === 'number' && finishedCount > 0;
+
+  let progress = 0;
+
+  if ( isFinished ) {
+    progress = 100;
+  } else if ( typeof finishedCount === 'number' && typeof totalCount === 'number' ) {
+    // If the optimization process has started, we want to show an indication that
+    // progress has been made, even if that's simply just that it's started, so we
+    // fake this by taking the actual process, reducing it to 7/8, and hard coding
+    // an additional 1/8 that's always present until completion, resulting in
+    // a consistent progress display
+    progress = 12.5 + ( ( finishedCount / totalCount * 100 ) / 8 * 7 );
+  }
 
   const totalSizeOriginal = images && addNumbers(images.map(({ size }) => size));
   const totalSizeOptimized = isUploadComplete && images && addNumbers(images.map(({ optimized }) => optimized?.size || 0));
@@ -352,8 +365,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               })}
             </ul>
             <div className="mb-6">
-              {typeof finishedCount === 'number' && typeof totalCount === 'number' && (
-                <ProgressBar progress={finishedCount / totalCount * 100} />
+              {typeof progress === 'number' && (
+                <ProgressBar progress={progress} />
               )}
               <div className="flex justify-between">
                 <p className="text-xs font-bold">

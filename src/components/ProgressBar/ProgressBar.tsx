@@ -23,7 +23,8 @@ const ProgressBar = ({ className = '', progress = 0, state = 'active' }: Progres
       <span
         className={cn(
           progressStyles,
-          state === 'error' && 'bg-red-500 w-full'
+          state === 'error' && 'bg-red-500 w-full',
+          // 'transition-all'
         )}
         style={state !== 'error' ? { width: `${progress}%` } : {}}
       >
