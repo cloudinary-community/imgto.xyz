@@ -10,7 +10,7 @@ import { ImageDownload, ImageUpload } from '@/types/image';
 import Button from '@/components/Button';
 import DownloadButton from '@/components/DownloadButton';
 
-const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg', 'jxl']
+const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg', 'jxl'];
 
 interface DownloadProps {
   image: ImageUpload;
@@ -118,6 +118,7 @@ const Result = ({ image }: DownloadProps) => {
                     <ul className="absolute top-[calc(100%_+_.5em)] left-0 min-w-full text-left whitespace-nowrap bg-white shadow-lg rounded px-2 py-2">
                       {DOWNLOAD_FORMATS
                         .filter(format => image?.[format as keyof ImageUpload])
+                        .filter(format => format !== image.upload?.format)
                         .map(format => {
                           const download = image[format as keyof ImageUpload] as ImageDownload;
                           return (
