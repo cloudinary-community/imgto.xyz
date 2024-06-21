@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { preconnect } from 'react-dom'
 import { Check, DownloadIcon, LoaderCircle } from 'lucide-react';
-import { FileRejection } from 'react-dropzone';
 
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
@@ -20,7 +19,7 @@ import Button from '@/components/Button';
 import Result from '@/components/Result';
 
 const MAX_IMAGES = 20;
-const MAX_SIZE = 10; // MB
+const MAX_SIZE = 10 * 1000000; // 10MB
 
 const stateMap: { [key: string]: string } = {
   ready: 'Ready',
@@ -256,46 +255,6 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   }, [images])
 
   /**
-   * handleOnDrop
-   */
-
-  async function handleOnDrop(acceptedFiles: Array<File>, rejectedFiles: Array<FileRejection>) {
-    const dropDate = Date.now();
-
-    const files = [
-      ...acceptedFiles.map(acceptedFile => {
-        return {
-          id: `${dropDate}-${acceptedFile.name}`,
-          name: acceptedFile.name,
-          size: acceptedFile.size,
-          file: acceptedFile,
-          state: 'dropped',
-        }
-      }),
-      ...rejectedFiles.map(({ file: rejectedFile, errors }) => {
-        return {
-          id: `${dropDate}-${rejectedFile.name}`,
-          name: rejectedFile.name,
-          size: rejectedFile.size,
-          file: rejectedFile,
-          // Don't yet put it in an error state so that we can allow the image
-          // to be read into the document
-          state: 'dropped',
-          errors: errors?.map(({ message }) => message) || true
-        }
-      }),
-    ];
-
-    setImages(prev => {
-      const nextImages = [
-        ...(prev || []),
-        ...files
-      ];
-      return nextImages;
-    });
-  }
-
-  /**
    * handleOnDownloadAll
    */
 
@@ -326,11 +285,45 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
       <div className={`${uploadContainerClassName} mb-20`}>
         <Dropzone
           className="min-h-0 self-start"
-          onDrop={handleOnDrop}
+
+          accept={{
+            'image/avif': ['.avif'],
+            'image/jpeg': ['.jpg', '.jpeg'],
+            'image/png': ['.png'],
+            'image/webp': ['.webp'],
+          }}
+          onDrop={(droppedFile) => {
+            const dropDate = Date.now();
+
+            const upload: ImageUpload = {
+              id: `${dropDate}-${droppedFile.name}`,
+              name: droppedFile.name,
+              size: droppedFile.size,
+              file: droppedFile.file,
+              
+              // Don't yet put it in an error state so that we can allow the image
+              // to be read into the document
+
+              state: 'dropped',
+            };
+
+            if ( droppedFile.errors ) {
+              upload.errors = droppedFile.errors;
+            }
+
+            setImages(prev => {
+              const nextImages = [
+                ...(prev || []),
+                upload
+              ];
+              return nextImages;
+            });
+          }}
           disabled={isDisabled}
           maxSize={MAX_SIZE}
           maxFiles={MAX_IMAGES}
         />
+
         {Array.isArray(images) && (
           <section>
             <h2 className="flex justify-between mb-1">
@@ -342,14 +335,25 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             <p className="text-sm mb-5">
               Total Original Size: { totalSizeOriginal && formatBytes(totalSizeOriginal, { fixed: 0 }) }
             </p>
-            <ul className="grid grid-cols-8 gap-2 mb-7">
+            <ul className={cn(
+                `grid gap-2 mb-7`,
+                images.length <= 16 && 'grid-cols-8',
+                images.length > 16 && 'grid-cols-10'
+              )
+            }>
               {images.map((image) => {
                 return (
-                  <li key={image.id} className="p-1 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
+                  <li
+                    key={image.id}
+                    className={cn(
+                      `p-0.5 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]`,
+                      image.state === 'error' ? 'bg-red-500' : 'bg-white'
+                    )}
+                  >
                     <a href={`#${image.id}`} className="block aspect-square relative">
                       {image.data && (
                         <img
-                          className="block aspect-square object-cover rounded relative z-10"
+                          className="block aspect-square object-cover rounded-[.4rem] relative z-10"
                           width={image.width}
                           height={image.height}
                           src={image.data as string}
@@ -358,12 +362,15 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                           loading="lazy"
                         />
                       )}
-                      <span className={`block absolute top-0 left-0 z-0 w-full aspect-square rounded bg-zinc-200 animate-pulse`} />
+                      <span className="block absolute top-0 left-0 z-0 w-full aspect-square rounded-[.4rem] bg-white overflow-hidden">
+                        <span className="block w-full h-full bg-zinc-200 animate-pulse" />
+                      </span>
                     </a>
                   </li>
                 );
               })}
             </ul>
+
             <div className="mb-6">
               {typeof progress === 'number' && (
                 <ProgressBar progress={progress} />
@@ -377,6 +384,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 </p>
               </div>
             </div>
+
             {globalState === 'finished' && hasDownloadsAvailable && (
               <div className="flex justify-between mb-6">
                 <div>
@@ -403,6 +411,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
           </section>
         )}
       </div>
+      
       {Array.isArray(images) && (
         <div className="w-full max-w-xl mx-auto">
           <ul>
