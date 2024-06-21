@@ -262,6 +262,9 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   async function handleOnDrop(acceptedFiles: Array<File>, rejectedFiles: Array<FileRejection>) {
     const dropDate = Date.now();
 
+    console.log('acceptedFiles', acceptedFiles)
+    console.log('rejectedFiles', rejectedFiles)
+
     const files = [
       ...acceptedFiles.map(acceptedFile => {
         return {
@@ -326,6 +329,16 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
       <div className={`${uploadContainerClassName} mb-20`}>
         <Dropzone
           className="min-h-0 self-start"
+
+          accept={{
+            'image/avif': ['.avif'],
+            'image/jpeg': ['.jpg', '.jpeg'],
+            'image/png': ['.png'],
+            'image/webp': ['.webp'],
+          }}
+
+
+
           onDrop={handleOnDrop}
           disabled={isDisabled}
           maxSize={MAX_SIZE}
