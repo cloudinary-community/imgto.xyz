@@ -96,6 +96,7 @@ const Result = ({ image }: DownloadProps) => {
             <>
               <div className="flex gap-2 sm:gap-4 flex-col xs:flex-row">
                 <Button
+                  className="relative z-0"
                   onClick={async () => {
                     if ( !image?.optimized?.url || !image.upload?.format ) return;
                     await downloadFile(image.optimized.url, image.upload.format);
@@ -107,7 +108,7 @@ const Result = ({ image }: DownloadProps) => {
 
                 <div ref={asButtonContainerRef} className="flex items-center relative">
                   <Button
-                    className="bg-white hover:bg-white active:bg-white text-zinc-500 hover:text-zinc-400 border-2 border-zinc-400"
+                    className="relative z-0 bg-white hover:bg-white active:bg-white text-zinc-500 hover:text-zinc-400 border-2 border-zinc-400"
                     onClick={() => setAsDropdownOpen(!asDropdownOpen)}
                     size="xs"
                   >
@@ -115,7 +116,7 @@ const Result = ({ image }: DownloadProps) => {
                     <ChevronDown className="w-5 h-5" />
                   </Button>
                   {asDropdownOpen && (
-                    <ul className="absolute top-[calc(100%_+_.5em)] left-0 min-w-full text-left whitespace-nowrap bg-white shadow-lg rounded px-2 py-2">
+                    <ul className="absolute top-[calc(100%_+_.5em)] left-0 z-10 min-w-full text-left whitespace-nowrap bg-white shadow-lg rounded px-2 py-2">
                       {DOWNLOAD_FORMATS
                         .filter(format => image?.[format as keyof ImageUpload])
                         .filter(format => format !== image.upload?.format)
