@@ -1,9 +1,6 @@
 'use client';
 
-// import { useCallback } from 'react';
-import { Fragment, memo, useCallback, useEffect, useRef, useState } from 'react';
-import { DropEvent, FileRejection, useDropzone } from 'react-dropzone';
-
+import {  useCallback, useEffect, useRef, useState } from 'react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForExternal, monitorForExternal, } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import { containsFiles, getFiles } from '@atlaskit/pragmatic-drag-and-drop/external/file';
@@ -11,7 +8,6 @@ import { preventUnhandled } from '@atlaskit/pragmatic-drag-and-drop/prevent-unha
 
 import { cn } from '@/lib/util';
 import Button from '../Button';
-
 
 interface UserUpload {
 	type: 'image';
@@ -31,9 +27,6 @@ interface DropzoneProps {
   maxFiles?: number;
   accept?: Record<string, Array<string>>;
 }
-
-// maxFiles,
-  // maxSize: maxSize * 1000000, // 10mb
 
 // Based on example: https://atlassian.design/components/pragmatic-drag-and-drop/examples#file
 
@@ -185,11 +178,6 @@ const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize 
     if ( typeof accept !== 'object' || accept[fileType] ) return true;
     return false;
   }
-
-
-  
-
-  
 
   return (
     <>
