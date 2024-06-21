@@ -12,7 +12,7 @@ import Footer from '@/components/Footer';
 
 export async function generateMetadata() {
   return {
-    title: 'imgto.xyz - Image Optimization Toolkit',
+    title: 'imgto.xyz - Free Image Optimization Toolkit',
     description: 'Improve website performance for free by optimizing your JPG, PNG, WebP, and AVIF images using imgto.xyz.',
     openGraph: {
       images: [
