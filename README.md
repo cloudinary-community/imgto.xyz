@@ -15,7 +15,7 @@ Tech used to build imgto.xyz includes:
 1. Create a new local project
 
 ```
-npx create-next-app@latest -e https://github.com/cloudinary-community/imgto.xyz
+npx create-next-app@latest -e https://github.com/cloudinary-community/imgto.xyz imgto.xyz
 ```
 
 You can also fork or clone the project manually!
