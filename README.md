@@ -1,34 +1,47 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🛠️ imgto.xyz
+
+Easily optimize and convert your images to modern, efficent formats for free using imgto.xyz.
+
+## What's Inside
+
+Tech used to build imgto.xyz includes:
+
+* Next.js App Router
+* Styling with Tailwind CSS
+* Cloudinary for image upload, optimization, and conversion
 
 ## Getting Started
 
-First, run the development server:
+1. Create a new local project
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+```
+npx create-next-app@latest https://github.com/cloudinary-community/imgto.xyz
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+You can also fork or clone the project manually!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Create a .env.local file or configure your environment variables to include:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="<Your Cloud Name>"
+NEXT_PUBLIC_CLOUDINARY_API_KEY="<Your API Key>"
+CLOUDINARY_API_SECRET="<Your API Secret>"
+NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER="imgto.xyz"
+```
 
-## Learn More
+3. Install dependencies and start the project.
 
-To learn more about Next.js, take a look at the following resources:
+```
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+And you should now be running imgto.xyz at http://localhost:3000/!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Using imgto.xyz
 
-## Deploy on Vercel
+To start using imgto.xyz, simply upload some images! The Upload button can be found on the top right homepage.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+After uploading, your images will be optimized using Cloudinary tech.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+You'll be prompted to download your optimized file or alternatively download your file in a more efficient, modern format if available.
