@@ -10,7 +10,7 @@ import { ImageDownload, ImageUpload } from '@/types/image';
 import Button from '@/components/Button';
 import DownloadButton from '@/components/DownloadButton';
 
-const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg']
+const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg', 'jxl']
 
 interface DownloadProps {
   image: ImageUpload;

@@ -165,7 +165,13 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               src: results.public_id,
               format: 'jpg',
               quality: 'auto:low'
-            })
+            });
+
+            const jxlUrl = getCldImageUrl({
+              src: results.public_id,
+              format: 'jxl',
+              quality: 'auto:low'
+            });
 
             const formats: Record<string, string | object> = {
               optimized: {
@@ -181,6 +187,9 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               },
               jpg: {
                 url: jpgUrl,
+              },
+              jxl: {
+                url: jxlUrl,
               },
             };
 
@@ -291,6 +300,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             'image/jpeg': ['.jpg', '.jpeg'],
             'image/png': ['.png'],
             'image/webp': ['.webp'],
+            'image/jxl': ['.jxl'],
           }}
           onDrop={(droppedFile) => {
             const dropDate = Date.now();

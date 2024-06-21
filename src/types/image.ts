@@ -13,6 +13,7 @@ export interface ImageUpload {
   avif?: ImageDownload;
   webp?: ImageDownload;
   jpeg?: ImageDownload;
+  jxl?: ImageDownload;
   width?: number;
   height?: number;
   errors?: boolean | string | Array<string>;

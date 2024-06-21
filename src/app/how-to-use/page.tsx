@@ -34,7 +34,7 @@ export default function Home() {
 
             <p>
               And that&apos;s it! Once uploaded, we&apos;ll quickly optimize your image, giving you the ability to download it
-              in the format you uploaded in or alternatively download it in other popular formats, such as WebP and AVIF.
+              in the format you uploaded in or alternatively download it in other popular formats, such as WebP, AVIF, and JXL.
             </p>
 
             <p>

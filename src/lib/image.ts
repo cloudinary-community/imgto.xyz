@@ -68,6 +68,7 @@ const formatsMap: Record<string, string> = {
   avif: 'AVIF',
   jpg: 'JPG',
   jpeg: 'JPG',
+  jxl: 'JXL',
   png: 'PNG',
   webp: 'WebP',
 }
