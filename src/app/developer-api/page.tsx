@@ -54,19 +54,19 @@ export default function Home() {
               to optimize it:
             </p>
 
-            <pre className="overflow-x-scroll bg-zinc-100">
+            <pre className="overflow-x-scroll bg-zinc-100 dark:bg-zinc-900">
               <code>{`https://res.cloudinary.com/<Cloud Name>/image/upload/q_auto/<Public ID>`}</code>
             </pre>
 
             <blockquote className="text-[.85em] border-l-4 border-l-blue-500">
-              Note: imgto.xyz uses a heavier compression algorithm using <code className="bg-zinc-100 p-2 rounded">{`q_auto:low`}</code>.
+              Note: imgto.xyz uses a heavier compression algorithm using <code className="bg-zinc-100 dark:bg-zinc-900 p-2 rounded">{`q_auto:low`}</code>.
             </blockquote>
 
             <p>
-              Converting the image to a new format is just as simple, using the <code className="bg-zinc-100 p-2 rounded">{`f_<format>`}</code> transformation, such as:
+              Converting the image to a new format is just as simple, using the <code className="bg-zinc-100 dark:bg-zinc-900 p-2 rounded">{`f_<format>`}</code> transformation, such as:
             </p>
 
-            <pre className="overflow-x-scroll bg-zinc-100">
+            <pre className="overflow-x-scroll bg-zinc-100 dark:bg-zinc-900">
               <code>{`https://res.cloudinary.com/<Cloud Name>/image/upload/f_avif/<Public ID>`}</code>
             </pre>
 

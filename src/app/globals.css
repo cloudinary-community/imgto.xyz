@@ -53,7 +53,7 @@ body,
 
 #root:before {
   opacity: .15;
-  background: theme('colors.yellow.500');
+  background: theme('colors.green.600');
   border-radius: 50%;
   width: 80vw;
   height: 60vh;
@@ -91,6 +91,7 @@ a:hover {
   }
   #root:before {
     opacity: .05;
+    background: theme('colors.yellow.500');
   }
   #root:after {
     opacity: .08;

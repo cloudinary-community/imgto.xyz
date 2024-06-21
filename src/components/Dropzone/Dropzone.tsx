@@ -36,14 +36,14 @@ const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize 
 	const [state, setState] = useState<'idle' | 'potential' | 'over'>('idle');
 	const [uploads, setUploads] = useState<UserUpload[]>([]);
 
-  let dropzoneStyles = 'w-full text-center bg-white dark:bg-zinc-900 rounded-2xl';
+  let dropzoneStyles = 'w-full text-center bg-white dark:bg-slate-950 rounded-2xl';
 
   if ( state === 'over' && !disabled ) {
     dropzoneStyles = `${dropzoneStyles} relative shadow-blue-400/60 before:content-["_"] before:block before:w-full before:h-full before:bg-blue-500 before:blur-lg dark:before:blur-xl before:opacity-60 before:absolute before:top-0 before:right-0 before:z-[-1] before:animate-faderight before:bg-[length:400%] before:bg-gradient-to-r before:from-blue-500 dark:before:from-blue-400 before:from-[10%] before:via-purple-600 dark:before:via-purple-500 before:to-blue-500 dark:before:to-blue-400 before:to-[90%]`;
   } else if ( disabled ) {
-    dropzoneStyles = `${dropzoneStyles} shadow-[0px_4px_14px_0px_rgba(0,0,0,0.15)] shadow-red-200 dark:shadow-zinc-900`;
+    dropzoneStyles = `${dropzoneStyles} shadow-[0px_4px_14px_0px_rgba(0,0,0,0.15)] shadow-red-200 dark:shadow-slate-900`;
   } else {
-    dropzoneStyles = `${dropzoneStyles} shadow-[0px_4px_14px_0px_rgba(0,0,0,0.15)] shadow-zinc-200 dark:shadow-zinc-900`;
+    dropzoneStyles = `${dropzoneStyles} shadow-[0px_4px_14px_0px_rgba(0,0,0,0.15)] shadow-zinc-200 dark:shadow-slate-900`;
   }
 
    // Creating a stable reference so that we can use it in our unmount effect.
