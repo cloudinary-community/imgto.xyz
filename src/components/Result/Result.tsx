@@ -115,7 +115,7 @@ const Result = ({ image }: DownloadProps) => {
                     <ChevronDown className="w-5 h-5" />
                   </Button>
                   {asDropdownOpen && (
-                    <ul className="absolute top-[calc(100%_+_.5em)] right-0 text-left whitespace-nowrap bg-white shadow-lg rounded px-2 py-2">
+                    <ul className="absolute top-[calc(100%_+_.5em)] left-0 min-w-full text-left whitespace-nowrap bg-white shadow-lg rounded px-2 py-2">
                       {DOWNLOAD_FORMATS
                         .filter(format => image?.[format as keyof ImageUpload])
                         .map(format => {
@@ -127,6 +127,8 @@ const Result = ({ image }: DownloadProps) => {
                                 url={download?.url || ''}
                                 filename={`${downloadName}.${format}`}
                                 title={`Dowload as .${ format }`}
+                                preload
+                                showSize
                               >
                                 .{ format }
                               </DownloadButton>
