@@ -342,10 +342,15 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             <p className="text-sm mb-5">
               Total Original Size: { totalSizeOriginal && formatBytes(totalSizeOriginal, { fixed: 0 }) }
             </p>
-            <ul className="grid grid-cols-8 gap-2 mb-7">
+            <ul className={cn(
+                `grid gap-2 mb-7`,
+                images.length <= 16 && 'grid-cols-8',
+                images.length > 16 && 'grid-cols-10'
+              )
+            }>
               {images.map((image) => {
                 return (
-                  <li key={image.id} className="p-1 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
+                  <li key={image.id} className="p-0.5 relative rounded-lg shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
                     <a href={`#${image.id}`} className="block aspect-square relative">
                       {image.data && (
                         <img
