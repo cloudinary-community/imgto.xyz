@@ -43,10 +43,6 @@ const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize 
 	const [state, setState] = useState<'idle' | 'potential' | 'over'>('idle');
 	const [uploads, setUploads] = useState<UserUpload[]>([]);
 
-  console.log('state', state)
-  console.log('uploads', uploads)
-
-
   let dropzoneStyles = 'w-full text-center bg-white dark:bg-zinc-900 rounded-2xl';
 
   if ( state === 'over' && !disabled ) {

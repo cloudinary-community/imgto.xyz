@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { preconnect } from 'react-dom'
 import { Check, DownloadIcon, LoaderCircle } from 'lucide-react';
-import { FileRejection } from 'react-dropzone';
 
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
@@ -255,49 +254,6 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     });
   }, [images])
 
-  // /**
-  //  * handleOnDrop
-  //  */
-
-  // async function handleOnDrop(acceptedFiles: Array<File>, rejectedFiles: Array<FileRejection>) {
-  //   const dropDate = Date.now();
-
-  //   console.log('acceptedFiles', acceptedFiles)
-  //   console.log('rejectedFiles', rejectedFiles)
-
-  //   const files = [
-  //     ...acceptedFiles.map(acceptedFile => {
-  //       return {
-  //         id: `${dropDate}-${acceptedFile.name}`,
-  //         name: acceptedFile.name,
-  //         size: acceptedFile.size,
-  //         file: acceptedFile,
-  //         state: 'dropped',
-  //       }
-  //     }),
-  //     ...rejectedFiles.map(({ file: rejectedFile, errors }) => {
-  //       return {
-  //         id: `${dropDate}-${rejectedFile.name}`,
-  //         name: rejectedFile.name,
-  //         size: rejectedFile.size,
-  //         file: rejectedFile,
-  //         // Don't yet put it in an error state so that we can allow the image
-  //         // to be read into the document
-  //         state: 'dropped',
-  //         errors: errors?.map(({ message }) => message) || true
-  //       }
-  //     }),
-  //   ];
-
-  //   setImages(prev => {
-  //     const nextImages = [
-  //       ...(prev || []),
-  //       ...files
-  //     ];
-  //     return nextImages;
-  //   });
-  // }
-
   /**
    * handleOnDownloadAll
    */
@@ -367,6 +323,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
           maxSize={MAX_SIZE}
           maxFiles={MAX_IMAGES}
         />
+
         {Array.isArray(images) && (
           <section>
             <h2 className="flex justify-between mb-1">
@@ -413,6 +370,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 );
               })}
             </ul>
+
             <div className="mb-6">
               {typeof progress === 'number' && (
                 <ProgressBar progress={progress} />
@@ -426,6 +384,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                 </p>
               </div>
             </div>
+
             {globalState === 'finished' && hasDownloadsAvailable && (
               <div className="flex justify-between mb-6">
                 <div>
@@ -452,6 +411,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
           </section>
         )}
       </div>
+      
       {Array.isArray(images) && (
         <div className="w-full max-w-xl mx-auto">
           <ul>
