@@ -43,13 +43,12 @@ async function getAllModerations() {
         max_results: 500,
         resource_type: type
       });
-
       return results.resources;
     }));
 
     return moderations.flat();
   } catch(e) {
-    console.log(`Failed to get all moderations: ${e.message}`);
+    console.log(`Failed to get all moderations`, e);
   }
 }
 
@@ -75,11 +74,23 @@ async function deleteModerations(moderations) {
         console.log(`Deleting ${moderations.length} moderations...`);
 
         const resourceIds = moderations.map(({ public_id }) => public_id);
-        const results = await cloudinary.api.delete_resources(resourceIds, {
-          resource_type: resourceType
-        });
 
-        const deletedIds = Object.keys(results.deleted);
+        // Can only delete 100 items at a time
+
+        const chunkSize = 100;
+        const results = [];
+
+        // https://stackoverflow.com/a/68172013
+        for (let i = 0; i < Math.ceil(resourceIds.length / chunkSize); i++) {
+          const chunk = resourceIds.slice(i * chunkSize, ( i + 1 ) * chunkSize);
+          console.log(`Deleting chunk with ${chunk.length} items.`);
+          const chunkResults = await cloudinary.api.delete_resources(chunk, {
+            resource_type: resourceType
+          });
+          results.push(chunkResults);
+        }
+
+        const deletedIds = Object.keys(results.flatMap(({ deleted }) => deleted));
 
         if ( deletedIds.length !== moderations.length ) {
           const notDeleted = deletedIds.filter(id => !moderations.includes(id));
@@ -91,6 +102,6 @@ async function deleteModerations(moderations) {
 
     }));
   } catch(e) {
-    console.log(`Failed to delete all moderations: ${e.message}`);
+    console.log(`Failed to delete all moderations`, e);
   }
 }
