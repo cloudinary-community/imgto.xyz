@@ -146,7 +146,34 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
               quality: 'auto:low'
             });
 
-            const optimizedData = await getFileBlob(optimizedUrl);
+            let optimizedData;
+
+            try {
+              optimizedData = await getFileBlob(optimizedUrl);
+            } catch(e) {
+              let message = 'Unknown Error';
+
+              if ( e instanceof Error ) {
+                if ( e.message === 'UNAUTHORIZED' ) {
+                  message = 'Someting went wrong. Try disabling any Ad Blockers and try again!';
+                }
+              }
+
+              toast.error(message);
+
+              setImages(prev => {
+                return [...(prev || [])].map(image => {
+                  const nextImage = { ...image };
+                  if ( image.id === imageToUpload.id ) {
+                    nextImage.state = 'error';
+                  }
+                  return nextImage;
+                });
+              });
+
+              return;
+            }
+
             const optimizedSize = optimizedData.size;
 
             const avifUrl = getCldImageUrl({

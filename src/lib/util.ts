@@ -104,7 +104,18 @@ export function formatBytes(bytes: number, { type = 'kb', limit, fixed = 0, comm
  */
 
 export async function getFileBlob(url: string) {
-  return fetch(url).then(r => r.blob());
+  const response = await fetch(url);
+
+  if ( !response.ok ) {
+    if ( response.status === 401 ) {
+      throw new Error('UNAUTHORIZED');
+    }
+    throw new Error('UNKNOWN_ERROR');
+  }
+
+  const blob = await response.blob();
+
+  return blob;
 }
 
 /**
