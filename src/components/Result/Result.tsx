@@ -45,10 +45,10 @@ const Result = ({ image }: DownloadProps) => {
 
   return (
     <div className="flex w-full gap-4 sm:gap-10 mb-10">
-      <span className="relative w-24 sm:w-32 self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
+      <span className="relative shrink-0 w-24 sm:w-32 self-start shadow-[0px_2px_8px_0px_rgba(0,0,0,0.15)]">
         {image.data && (
           <img
-            className="block rounded relative z-10 aspect-square object-cover"
+            className="block w-full rounded relative z-10 aspect-square object-cover"
             width={image.width}
             height={image.height}
             src={image.data as string }

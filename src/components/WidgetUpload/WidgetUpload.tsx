@@ -116,21 +116,27 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             try {
               results = await uploadFile(imageToUpload.file);
             } catch(e) {
-              let message = 'Something went wrong, try again!';
+              let message: string | undefined;
 
               if ( e instanceof Error ) {
                 if ( e.message === 'INAPPROPRIATE_CONTENT' ) {
                   message = 'An image you uploaded appears to be inappropriate and not supported by imgto.xyz. If you think this is in error, please email community@cloudinary.com.';
+                } else if ( e.message.includes('minimum pixel resolution') ) {
+                  message = 'Images smaller than 80x80px are not supported.';
                 }
               }
 
-              toast.error(message);
+              toast.error(message || 'Something went wrong, try again!');
 
               setImages(prev => {
                 return [...(prev || [])].map(image => {
                   const nextImage = { ...image };
                   if ( image.id === imageToUpload.id ) {
                     nextImage.state = 'error';
+
+                    if ( message ) {
+                      nextImage.errors = [message]
+                    }
                   }
                   return nextImage;
                 });
@@ -399,7 +405,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                     <a href={`#${image.id}`} className="block aspect-square relative">
                       {image.data && (
                         <img
-                          className="block aspect-square object-cover rounded-[.4rem] relative z-10"
+                          className="block w-full aspect-square object-cover rounded-[.4rem] relative z-10"
                           width={image.width}
                           height={image.height}
                           src={image.data as string}
