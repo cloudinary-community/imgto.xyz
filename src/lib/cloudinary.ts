@@ -46,5 +46,11 @@ export async function uploadFile(file: File) {
   
   const results = await response.json();
 
+  const moderation = results.moderation?.find(({ kind }: { kind: string; }) => kind === 'aws_rek');
+
+  if ( moderation?.status === 'rejected' ) {
+    throw new Error('INAPPROPRIATE_CONTENT');
+  }
+
   return results;
 }

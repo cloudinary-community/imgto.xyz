@@ -116,7 +116,16 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             try {
               results = await uploadFile(imageToUpload.file);
             } catch(e) {
-              toast.error('Something went wrong, try again!')
+              let message = 'Something went wrong, try again!';
+
+              if ( e instanceof Error ) {
+                if ( e.message === 'INAPPROPRIATE_CONTENT' ) {
+                  message = 'An image you uploaded appears to be inappropriate and not supported by imgto.xyz. If you think this is in error, please email community@cloudinary.com.';
+                }
+              }
+
+              toast.error(message);
+
               setImages(prev => {
                 return [...(prev || [])].map(image => {
                   const nextImage = { ...image };
