@@ -54,7 +54,7 @@ export default function Home() {
               to optimize it:
             </p>
 
-            <pre className="overflow-x-scroll bg-zinc-100 dark:bg-zinc-900">
+            <pre className="overflow-x-auto bg-zinc-100 dark:bg-zinc-900">
               <code>{`https://res.cloudinary.com/<Cloud Name>/image/upload/q_auto/<Public ID>`}</code>
             </pre>
 
@@ -66,7 +66,7 @@ export default function Home() {
               Converting the image to a new format is just as simple, using the <code className="bg-zinc-100 dark:bg-zinc-900 p-2 rounded">{`f_<format>`}</code> transformation, such as:
             </p>
 
-            <pre className="overflow-x-scroll bg-zinc-100 dark:bg-zinc-900">
+            <pre className="overflow-x-auto bg-zinc-100 dark:bg-zinc-900">
               <code>{`https://res.cloudinary.com/<Cloud Name>/image/upload/f_avif/<Public ID>`}</code>
             </pre>
 

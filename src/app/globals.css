@@ -34,7 +34,6 @@ body,
   grid-template-rows: auto 1fr auto;
   position: relative;
   overflow-x: hidden;
-  width: 100vw;
 }
 
 #root:before,
