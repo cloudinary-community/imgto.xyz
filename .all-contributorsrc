@@ -15,6 +15,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "sina-ss",
+      "name": "Sina Sepahvand",
+      "avatar_url": "https://avatars.githubusercontent.com/u/64675666?v=4",
+      "profile": "https://sepahvand.me",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
