@@ -36,7 +36,7 @@ interface ReadImageReturn {
 }
 
 export function readImage(file: File): Promise<ReadImageReturn> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const reader = new FileReader;
 
     reader.onload = function() {
@@ -56,8 +56,13 @@ export function readImage(file: File): Promise<ReadImageReturn> {
       img.src = reader.result as string;
     };
 
+    if (file.type === 'image/heif' && file.name.endsWith('.heic') && typeof window !== 'undefined') {
+      const heic2any = (await import('heic2any')).default;
+      file = await heic2any({ blob: file, toType: 'image/jpeg' }) as File;
+    }
+
     reader.readAsDataURL(file);
-  })  
+  })
 }
 
 /**
@@ -71,6 +76,7 @@ const formatsMap: Record<string, string> = {
   jxl: 'JXL',
   png: 'PNG',
   webp: 'WebP',
+  heif: 'HEIF',
 }
 
 export function getImageFormatFromType(type: string, formatted = false) {

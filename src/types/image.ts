@@ -12,6 +12,7 @@ export interface ImageUpload {
   optimized?: ImageDownload;
   avif?: ImageDownload;
   webp?: ImageDownload;
+  heic?: ImageDownload;
   jpeg?: ImageDownload;
   jxl?: ImageDownload;
   width?: number;
