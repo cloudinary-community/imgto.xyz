@@ -343,7 +343,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             'image/png': ['.png'],
             'image/webp': ['.webp'],
             'image/jxl': ['.jxl'],
-            'image/heif': ['.heic'],
+            'image/heif': ['.heic', '.heif'],
           }}
           onDrop={(droppedFile) => {
             const dropDate = Date.now();
