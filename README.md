@@ -15,13 +15,17 @@ Tech used to build imgto.xyz includes:
 
 ## Getting Started
 
-1. Create a new local project
+1. Clone the project or create a new copy:
+
+```
+git clone https://github.com/cloudinary-community/imgto.xyz.git
+```
+
+If you want to create a new copy, you can either fork or run:
 
 ```
 npx create-next-app@latest -e https://github.com/cloudinary-community/imgto.xyz imgto.xyz
 ```
-
-You can also fork or clone the project manually!
 
 2. Create a .env.local file or configure your environment variables to include:
 
