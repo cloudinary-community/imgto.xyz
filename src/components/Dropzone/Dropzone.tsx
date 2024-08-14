@@ -179,18 +179,6 @@ const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize 
     return false;
   }
 
-  function getAcceptedFileTypes(accept: Record<string, Array<string>> | undefined): string | undefined {
-    if (!accept) return undefined;
-    
-    let acceptedMimeTypes = [] as string[];
-    Object.entries(accept).forEach(([mimeType, extensions]) => {
-      if (mimeType === 'image/heif') acceptedMimeTypes.push(...extensions); // The browser does not support the image/heif MIME type, so we need to add the extensions
-      else acceptedMimeTypes.push(mimeType);
-    });
-
-    return acceptedMimeTypes.join(', ');
-  }
-
   return (
     <>
       <div className={cn(dropzoneStyles, className)}>
@@ -222,7 +210,7 @@ const Dropzone = ({ className = '', onDrop, disabled = false, maxFiles, maxSize 
                 className="sr-only"
                 onChange={onFileInputChange}
                 type="file"
-                accept={getAcceptedFileTypes(accept)}
+                accept={accept ? Object.entries(accept).map(([key]) => key).join(', ') : undefined}
                 multiple
               />
             </div>
