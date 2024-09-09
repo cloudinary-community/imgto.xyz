@@ -1,33 +1,33 @@
-import './globals.css'
-import { Inter } from 'next/font/google'
-import { getCldOgImageUrl } from 'next-cloudinary';
-import { Analytics } from '@vercel/analytics/react';
-import { Toaster } from 'sonner'
+import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
+import { getCldOgImageUrl } from "next-cloudinary";
+import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 
+const inter = Inter({ subsets: ["latin"] });
 
-const inter = Inter({ subsets: ['latin'] })
-
-import Nav from '@/components/Nav';
-import Footer from '@/components/Footer'; 
+import Footer from "@/components/Footer";
+import Nav from "@/components/Nav";
 
 export async function generateMetadata() {
   return {
-    title: 'imgto.xyz - Free Image Optimization Toolkit',
-    description: 'Improve website performance for free by optimizing your JPG, PNG, WebP, AVIF, and JXL images using imgto.xyz.',
+    title: "imgto.xyz - Free Image Optimization Toolkit",
+    description:
+      "Improve website performance for free by optimizing your JPG, PNG, WebP, AVIF, and JXL images using imgto.xyz.",
     openGraph: {
       images: [
         getCldOgImageUrl({
-          src: 'assets/imgtoxyz-social-card_gxzddx'
-        })
+          src: "assets/imgtoxyz-social-card_gxzddx",
+        }),
       ],
     },
-  }
+  };
 }
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
@@ -41,5 +41,5 @@ export default function RootLayout({
         <Toaster />
       </body>
     </html>
-  )
+  );
 }

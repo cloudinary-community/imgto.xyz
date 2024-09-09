@@ -1,7 +1,7 @@
-import Section from '@/components/Section';
-import Container from '@/components/Container';
-import PageTitle from '@/components/PageTitle';
-import Link from 'next/link';
+import Container from "@/components/Container";
+import PageTitle from "@/components/PageTitle";
+import Section from "@/components/Section";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -16,9 +16,11 @@ export default function Home() {
             </p>
 
             <p>
-              This project is supported by Cloudinary. imgto.xyz
-              uses <a href="https://cloudinary.com?utm_source=imgto.xyz&utm_medium=referral&utm_campaign=devx_imgtoxyz&utm_content=pricing_api">Cloudinary&apos;s image API</a> to
-              optimize images and convert to modern formats.
+              This project is supported by Cloudinary. imgto.xyz uses{" "}
+              <a href="https://cloudinary.com?utm_source=imgto.xyz&utm_medium=referral&utm_campaign=devx_imgtoxyz&utm_content=pricing_api">
+                Cloudinary&apos;s image API
+              </a>{" "}
+              to optimize images and convert to modern formats.
             </p>
 
             <p>
@@ -28,5 +30,5 @@ export default function Home() {
         </Container>
       </Section>
     </div>
-  )
+  );
 }

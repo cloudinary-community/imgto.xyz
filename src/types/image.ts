@@ -1,4 +1,4 @@
-import { CloudinaryResource } from '@/types/cloudinary';
+import { CloudinaryResource } from "@/types/cloudinary";
 
 export interface ImageUpload {
   img?: HTMLImageElement;

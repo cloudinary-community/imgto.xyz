@@ -1,7 +1,7 @@
 "use client";
 
-import { CldImage as CldImageDefault, CldImageProps }  from 'next-cloudinary';
-import { PlaceholderValue } from 'next/dist/shared/lib/get-img-props';
+import { CldImage as CldImageDefault, CldImageProps } from "next-cloudinary";
+import { PlaceholderValue } from "next/dist/shared/lib/get-img-props";
 
 const CldImage = (props: CldImageProps) => {
   const width = parseInt(`${props.width}`);
@@ -19,16 +19,18 @@ const CldImage = (props: CldImageProps) => {
       <rect width="${w}" height="${h}" fill="#fff" />
       <rect id="r" width="${w}" height="${h}" fill="url(#g)" />
       <animate xlink:href="#r" attributeName="x" from="-${w}" to="${w}" dur="1s" repeatCount="indefinite"  />
-    </svg>`
-  
+    </svg>`;
+
   const toBase64 = (str: string) =>
-    typeof window === 'undefined'
-      ? Buffer.from(str).toString('base64')
-      : window.btoa(str)
-  
+    typeof window === "undefined"
+      ? Buffer.from(str).toString("base64")
+      : window.btoa(str);
+
   const dataUrl = `data:image/svg+xml;base64,${toBase64(shimmer(width, height))}`;
 
-  return <CldImageDefault placeholder={dataUrl as PlaceholderValue} {...props} />
-}
+  return (
+    <CldImageDefault placeholder={dataUrl as PlaceholderValue} {...props} />
+  );
+};
 
 export default CldImage;

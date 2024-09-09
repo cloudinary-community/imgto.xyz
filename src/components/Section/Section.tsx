@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 interface SectionProps {
   children?: ReactNode;
@@ -6,11 +6,7 @@ interface SectionProps {
 }
 
 const Section = ({ children, className }: SectionProps) => {
-  return (
-    <section className={className}>
-      { children }
-    </section>
-  )
-}
+  return <section className={className}>{children}</section>;
+};
 
 export default Section;

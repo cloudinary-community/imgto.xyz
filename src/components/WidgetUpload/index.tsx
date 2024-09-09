@@ -1,1 +1,1 @@
-export { default } from './WidgetUpload';
+export { default } from "./WidgetUpload";
