@@ -1,1 +1,1 @@
-export { default } from './CldImage';
+export { default } from "./CldImage";

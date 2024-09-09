@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "biome check src",
+    "format": "biome check --write src",
+    "prepare": "husky"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.1.12",
@@ -17,8 +19,6 @@
     "autoprefixer": "^10.4.19",
     "cloudinary": "^2.2.0",
     "clsx": "^2.1.1",
-    "eslint": "8.47.0",
-    "eslint-config-next": "13.4.17",
     "heic2any": "0.0.4",
     "jszip": "^3.10.1",
     "lucide-react": "^0.378.0",
@@ -34,7 +34,15 @@
     "typescript": "^5.4.5"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.8.3",
     "@tailwindcss/typography": "^0.5.13",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "husky": "^9.1.5",
+    "lint-staged": "^15.2.10"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
   }
 }

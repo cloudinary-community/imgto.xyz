@@ -1,27 +1,29 @@
-import Link from 'next/link';
+import Link from "next/link";
 
-import Section from '@/components/Section';
-import Container from '@/components/Container';
-import WidgetUpload from '@/components/WidgetUpload';
-import CldImage from '@/components/CldImage';
-import Button from '@/components/Button';
+import Button from "@/components/Button";
+import CldImage from "@/components/CldImage";
+import Container from "@/components/Container";
+
+import Section from "@/components/Section";
+import WidgetUpload from "@/components/WidgetUpload";
 
 export default function Home() {
   return (
-    <div className="mt-4 md:mt-20 mb-12 md:mb-24">
+    <div className="mt-4 mb-12 md:mt-20 md:mb-24">
       <Section>
         <Container>
           <WidgetUpload className="mb-12 md:mb-36" />
 
-          <h1 className="text-5xl font-black text-center mb-6">
+          <h1 className="mb-6 text-center font-black text-5xl">
             Optimize Your Images for Free
           </h1>
 
-          <p className="text-xl text-center">
-            Easily optimize and compress your images to help improve performance. <strong>All free!</strong>
+          <p className="text-center text-xl">
+            Easily optimize and compress your images to help improve
+            performance. <strong>All free!</strong>
           </p>
 
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-12 max-w-4xl mt-20 md:mt-36 mx-auto">
+          <ul className="mx-auto mt-20 grid max-w-4xl grid-cols-1 gap-12 sm:grid-cols-2 md:mt-36">
             <li>
               <CldImage
                 className="block rounded-lg shadow-lg"
@@ -31,10 +33,10 @@ export default function Home() {
                 alt="Donut with icing and sprinkles"
                 sizes="100vw"
               />
-              <h2 className="font-bold text-2xl text-center mt-8">
+              <h2 className="mt-8 text-center font-bold text-2xl">
                 Compress Images
               </h2>
-              <p className="text-center mt-4">
+              <p className="mt-4 text-center">
                 Optimize images to help reduce file size and boost performance.
               </p>
             </li>
@@ -47,26 +49,26 @@ export default function Home() {
                 alt="Colorful umbrellas with AVIF format in corner"
                 sizes="100vw"
               />
-              <h2 className="font-bold text-2xl text-center mt-8">
+              <h2 className="mt-8 text-center font-bold text-2xl">
                 Convert Format
               </h2>
-              <p className="text-center mt-4">
+              <p className="mt-4 text-center">
                 Use modern image formats for more efficient, reduced file sizes.
               </p>
             </li>
           </ul>
 
-          <h2 className="font-black text-4xl text-center mt-24 md:mt-36 mb-8">
+          <h2 className="mt-24 mb-8 text-center font-black text-4xl md:mt-36">
             How Does it Work?
           </h2>
 
-          <p className="text-center text-xl max-w-2xl mb-8 mx-auto">
-            imgto.xyz uses <Link href="/developer-api">Cloudinary&apos;s Image API</Link> to
-            easily optimize and convert
-            your image to modern, efficient formats.
+          <p className="mx-auto mb-8 max-w-2xl text-center text-xl">
+            imgto.xyz uses{" "}
+            <Link href="/developer-api">Cloudinary&apos;s Image API</Link> to
+            easily optimize and convert your image to modern, efficient formats.
           </p>
 
-          <p className="text-center max-w-sm mt-8 mb-8 mx-auto">
+          <p className="mx-auto mt-8 mb-8 max-w-sm text-center">
             <a href="https://cloudinary.com?utm_source=imgto.xyz&utm_medium=referral&utm_campaign=devx_imgtoxyz&utm_content=home_logo">
               <CldImage
                 className="w-full"
@@ -79,12 +81,13 @@ export default function Home() {
             </a>
           </p>
 
-          <h2 className="font-black text-4xl text-center mt-24 md:mt-36 mb-8">
+          <h2 className="mt-24 mb-8 text-center font-black text-4xl md:mt-36">
             Optimize Your Images
           </h2>
 
-          <p className="text-center text-xl max-w-2xl mb-8 mx-auto">
-            Head back to the top and get started optimizing your images for free!
+          <p className="mx-auto mb-8 max-w-2xl text-center text-xl">
+            Head back to the top and get started optimizing your images for
+            free!
           </p>
 
           <p className="text-center">
@@ -95,5 +98,5 @@ export default function Home() {
         </Container>
       </Section>
     </div>
-  )
+  );
 }

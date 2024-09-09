@@ -1,8 +1,8 @@
-import Section from '@/components/Section';
-import Container from '@/components/Container';
-import PageTitle from '@/components/PageTitle';
-import CldImage from '@/components/CldImage';
-import Link from 'next/link';
+import CldImage from "@/components/CldImage";
+import Container from "@/components/Container";
+import PageTitle from "@/components/PageTitle";
+import Section from "@/components/Section";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -11,14 +11,16 @@ export default function Home() {
         <Container>
           <article className="prose-xl grid gap-0 prose-p:mt-0 prose-pre:mt-0 prose-blockquote:mt-0">
             <PageTitle>How to Use</PageTitle>
-            
+
             <p>
-              imgto.xyz is a tool that allows you to quickly and easily optimize your images for web and mobile devices.
+              imgto.xyz is a tool that allows you to quickly and easily optimize
+              your images for web and mobile devices.
             </p>
 
             <p>
-              To get started, upload your file on the homepage whether selecting the file from your local filesystem or
-              dragging it directly into the application.
+              To get started, upload your file on the homepage whether selecting
+              the file from your local filesystem or dragging it directly into
+              the application.
             </p>
 
             <p className="max-w-xl mx-auto">
@@ -33,8 +35,10 @@ export default function Home() {
             </p>
 
             <p>
-              And that&apos;s it! Once uploaded, we&apos;ll quickly optimize your image, giving you the ability to download it
-              in the format you uploaded in or alternatively download it in other popular formats, such as WebP, AVIF, and JXL.
+              And that&apos;s it! Once uploaded, we&apos;ll quickly optimize
+              your image, giving you the ability to download it in the format
+              you uploaded in or alternatively download it in other popular
+              formats, such as WebP, AVIF, and JXL.
             </p>
 
             <p>
@@ -44,5 +48,5 @@ export default function Home() {
         </Container>
       </Section>
     </div>
-  )
+  );
 }
