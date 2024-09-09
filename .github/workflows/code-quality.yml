@@ -10,9 +10,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Biome
-        uses: biomejs/setup-biome@v2
+      # - name: Setup Biome
+      #   uses: biomejs/setup-biome@v2
+      #   with:
+      #     version: latest
+      # - name: Run Biome
+      #   run: biome ci src
+
+      - uses: actions/setup-node@v3
         with:
-          version: latest
+          node-version: 20
+      - name: Install Dependencies
+        run: npm install
       - name: Run Biome
-        run: biome ci src
+        run: npm run lint
