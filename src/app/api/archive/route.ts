@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const downloads = await Promise.all(urls?.map(async ({ url, name, format }: ArchiveDownload) => {
       return {
         data: await fetch(url).then(r => r.arrayBuffer()),
-        name: `${name}.${format}`
+        name: `${name.split('.')[0]}.${format}`
       }
     }));
 
