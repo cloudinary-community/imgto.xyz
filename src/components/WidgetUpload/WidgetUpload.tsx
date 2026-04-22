@@ -123,6 +123,8 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
                   message = 'An image you uploaded appears to be inappropriate and not supported by imgto.xyz. If you think this is in error, please email community@cloudinary.com.';
                 } else if ( e.message.includes('minimum pixel resolution') ) {
                   message = 'Images smaller than 80x80px are not supported.';
+                } else if ( e.message.includes('Upload preset not found') || e.message.includes('preset not found') ) {
+                  message = 'The Cloudinary upload preset is missing or the name is wrong. In the Cloudinary console, create a signed upload preset, then set NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET in .env.local to that preset’s name (or use the default name imgtoxyz if you name it that).';
                 }
               }
 

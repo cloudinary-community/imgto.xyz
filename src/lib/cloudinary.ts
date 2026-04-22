@@ -8,8 +8,13 @@ export async function uploadFile(file: File) {
 
   const formData = new FormData();
 
+  const uploadPreset =
+    (typeof process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET === 'string' &&
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET) ||
+    'imgtoxyz';
+
   const parameters: { [key: string]: string | Blob } = {
-    upload_preset: 'imgtoxyz'
+    upload_preset: uploadPreset
   };
 
   if ( typeof process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER === 'string' ) {
@@ -21,13 +26,24 @@ export async function uploadFile(file: File) {
     formData.append(key, String(parameters[key]));
   });
 
-  const { signature } = await fetch('/api/sign', {
+  const signResponse = await fetch('/api/sign', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ...parameters,
       timestamp
     })
-  }).then(r => r.json());
+  });
+  const signBody = (await signResponse.json().catch(() => (null))) as
+    | { signature?: string; error?: string } | null;
+  if ( !signResponse.ok || !signBody || typeof signBody.signature !== 'string' ) {
+    const message =
+      signBody && typeof signBody.error === 'string'
+        ? signBody.error
+        : 'Failed to sign upload. Check that CLOUDINARY_API_SECRET is set.';
+    throw new Error(message);
+  }
+  const { signature } = signBody;
 
   formData.append('file', file);
   formData.append('api_key', String(process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY));
@@ -41,7 +57,7 @@ export async function uploadFile(file: File) {
 
   if ( !response.ok ) {
     const { error } = await response.json();
-    throw new Error(error.message || 'Uknown error');
+    throw new Error(error.message || 'Unknown error');
   }
   
   const results = await response.json();

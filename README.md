@@ -34,7 +34,10 @@ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="<Your Cloud Name>"
 NEXT_PUBLIC_CLOUDINARY_API_KEY="<Your API Key>"
 CLOUDINARY_API_SECRET="<Your API Secret>"
 NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER="imgto.xyz"
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET="<Your signed upload preset; default is imgtoxyz if omitted>"
 ```
+
+Create an [upload preset](https://cloudinary.com/documentation/upload_presets) in the Cloudinary console, set it to **Signed** (this app uses signed uploads), and use its name in `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`—or name the preset `imgtoxyz` and you can leave that line out.
 
 3. Install dependencies and start the project.
 
