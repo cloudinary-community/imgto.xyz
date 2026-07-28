@@ -315,8 +315,9 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     setArchiveState('archiving');
 
     const downloads = images?.filter(({ optimized }) => !!optimized).map(({ name, upload, optimized }) => {
+      const nameWithoutExt = name.replace(/\.[^/.]+$/, '');
       return {
-        name,
+        name: nameWithoutExt,
         format: upload?.format,
         url: optimized?.url
       }
