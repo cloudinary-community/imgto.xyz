@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { preconnect } from 'react-dom'
-import { Check, DownloadIcon, LoaderCircle } from 'lucide-react';
+import { Check, ChevronDown, DownloadIcon, LoaderCircle } from 'lucide-react';
 
 import { getCldImageUrl } from 'next-cloudinary';
 import pLimit from 'p-limit';
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
 import { readImage } from '@/lib/image';
 import { uploadFile } from '@/lib/cloudinary';
-import { ImageUpload } from '@/types/image';
+import { ImageDownload, ImageUpload } from '@/types/image';
 
 import Dropzone from '@/components/Dropzone';
 import ProgressBar from '@/components/ProgressBar';
@@ -32,9 +32,13 @@ interface WidgetUploadProps {
   className?: string;
 }
 
+const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg', 'jxl'];
+
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const [images, setImages] = useState<Array<ImageUpload> | null>(null);
   const [archiveState, setArchiveState] = useState('ready');
+  const [downloadAllAsOpen, setDownloadAllAsOpen] = useState(false);
+  const downloadAllAsRef = useRef<HTMLDivElement | null>(null);
 
   const imageStates = images?.map(({ state }) => state);
   const uploadingCount = imageStates?.filter(state => state === 'uploading').length || 0;
@@ -80,6 +84,21 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   if ( Array.isArray(images) && images.length > 0 ) {
     uploadContainerClassName = 'grid md:grid-cols-2 gap-10';
   }
+
+  // Close dropdown when clicking outside
+
+  function handleDocumentOnClick(event: MouseEvent) {
+    if ( downloadAllAsRef.current && !event.composedPath().includes(downloadAllAsRef.current) ) {
+      setDownloadAllAsOpen(false);
+    }
+  }
+
+  useEffect(() => {
+    document.body.addEventListener('click', handleDocumentOnClick);
+    return () => {
+      document.body.removeEventListener('click', handleDocumentOnClick);
+    }
+  }, []);
 
   // Establish connection with Cloudinary before requests
 
@@ -315,8 +334,9 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     setArchiveState('archiving');
 
     const downloads = images?.filter(({ optimized }) => !!optimized).map(({ name, upload, optimized }) => {
+      const nameWithoutExt = name.replace(/\.[^/.]+$/, '');
       return {
-        name,
+        name: nameWithoutExt,
         format: upload?.format,
         url: optimized?.url
       }
@@ -325,6 +345,31 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     await downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');
 
     setArchiveState('finished');
+
+    setTimeout(() => {
+      setArchiveState('ready');
+    }, 2000)
+  }
+
+  async function handleOnDownloadAllAs(targetFormat: string) {
+    if ( archiveState !== 'ready' ) return;
+
+    setArchiveState('archiving');
+
+    const downloads = images?.filter(({ optimized }) => !!optimized).map((image) => {
+      const nameWithoutExt = image.name.replace(/\.[^/.]+$/, '');
+      const formatDownload = image[targetFormat as keyof ImageUpload] as ImageDownload | undefined;
+      return {
+        name: nameWithoutExt,
+        format: targetFormat,
+        url: formatDownload?.url || image.optimized?.url
+      }
+    });
+
+    await downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');
+
+    setArchiveState('finished');
+    setDownloadAllAsOpen(false);
 
     setTimeout(() => {
       setArchiveState('ready');
@@ -442,21 +487,47 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             {globalState === 'finished' && hasDownloadsAvailable && (
               <div className="flex justify-between mb-6">
                 <div>
-                  <p className="mb-2">
-                    <Button onClick={handleOnDownloadAll}>
-                      { archiveState === 'archiving' && (
-                        <LoaderCircle className="text-white w-5 h-5 animate-spin" />
+                  <div className="flex gap-2 sm:gap-4 flex-col xs:flex-row">
+                    <p className="mb-0">
+                      <Button onClick={handleOnDownloadAll}>
+                        { archiveState === 'archiving' && (
+                          <LoaderCircle className="text-white w-5 h-5 animate-spin" />
+                        )}
+                        {archiveState === 'ready' && (
+                          <DownloadIcon className="w-5 h-5 text-white" />
+                        )}
+                        {archiveState === 'finished' && (
+                          <Check className="text-white w-5 h-5" />
+                        )}
+                        Download All
+                      </Button>
+                    </p>
+                    <div ref={downloadAllAsRef} className="flex items-center relative">
+                      <Button
+                        className="relative z-0 bg-white hover:bg-white active:bg-white text-zinc-500 hover:text-zinc-400 border-2 border-zinc-400"
+                        onClick={() => setDownloadAllAsOpen(!downloadAllAsOpen)}
+                        size="xs"
+                      >
+                        Download All As
+                        <ChevronDown className="w-5 h-5" />
+                      </Button>
+                      {downloadAllAsOpen && (
+                        <ul className="absolute top-[calc(100%_+_.5em)] left-0 z-10 min-w-full text-left whitespace-nowrap bg-white shadow-lg rounded px-2 py-2">
+                          {DOWNLOAD_FORMATS.map(format => (
+                            <li key={format} className="font-semibold mb-1">
+                              <button
+                                className="text-zinc-800 hover:text-zinc-500 px-2 py-1 block w-full text-left"
+                                onClick={() => handleOnDownloadAllAs(format)}
+                              >
+                                .{ format }
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
                       )}
-                      {archiveState === 'ready' && (
-                        <DownloadIcon className="w-5 h-5 text-white" />
-                      )}
-                      {archiveState === 'finished' && (
-                        <Check className="text-white w-5 h-5" />
-                      )}
-                      Download All
-                    </Button>
-                  </p>
-                  <p className="block text-sm font-bold">
+                    </div>
+                  </div>
+                  <p className="block text-sm font-bold mt-2">
                     Total Optimized: { totalSizeOptimized && formatBytes(totalSizeOptimized, { fixed: 0 }) }
                   </p>
                 </div>
