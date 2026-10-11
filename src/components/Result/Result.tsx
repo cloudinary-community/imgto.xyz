@@ -27,7 +27,7 @@ const Result = ({ image }: DownloadProps) => {
 
   async function downloadFile(url: string, format: string) {
     if ( typeof image?.optimized?.url !== 'string' ) return;
-    await downloadUrl(url, `${downloadName}.${format}`, { downloadBlob: true });
+    await downloadUrl(url, `${downloadName}.${format}`);
   }
 
   function handleDocumentOnClick(event: MouseEvent) {
