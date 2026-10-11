@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { preconnect } from 'react-dom'
 import { Check, DownloadIcon, LoaderCircle } from 'lucide-react';
 
 import { getCldImageUrl } from 'next-cloudinary';
@@ -80,10 +79,6 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   if ( Array.isArray(images) && images.length > 0 ) {
     uploadContainerClassName = 'grid md:grid-cols-2 gap-10';
   }
-
-  // Establish connection with Cloudinary before requests
-
-  useEffect(() => preconnect('https://res.cloudinary.com'), []);
 
   // Upload all of the images
 
