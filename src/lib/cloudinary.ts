@@ -1,3 +1,4 @@
+import { HttpError } from '@/lib/util';
 
 /**
  * uploadFile
@@ -21,13 +22,22 @@ export async function uploadFile(file: File) {
     formData.append(key, String(parameters[key]));
   });
 
-  const { signature } = await fetch('/api/sign', {
+  const signResponse = await fetch('/api/sign', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       ...parameters,
       timestamp
     })
-  }).then(r => r.json());
+  });
+
+  if ( !signResponse.ok ) {
+    throw new HttpError('Failed to sign upload', signResponse.status);
+  }
+
+  const { signature } = await signResponse.json();
 
   formData.append('file', file);
   formData.append('api_key', String(process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY));
@@ -40,8 +50,9 @@ export async function uploadFile(file: File) {
   });
 
   if ( !response.ok ) {
-    const { error } = await response.json();
-    throw new Error(error.message || 'Uknown error');
+    const { error } = await response.json().catch(() => ({ error: undefined }));
+    const retryAfter = parseInt(response.headers.get('Retry-After') || '') || undefined;
+    throw new HttpError(error?.message || 'Unknown error', response.status, retryAfter);
   }
   
   const results = await response.json();

@@ -100,17 +100,32 @@ export function formatBytes(bytes: number, { type = 'kb', limit, fixed = 0, comm
 }
 
 /**
- * getFileSize
+ * HttpError
+ */
+
+export class HttpError extends Error {
+  status: number;
+  retryAfter?: number;
+
+  constructor(message: string, status: number, retryAfter?: number) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+    this.retryAfter = retryAfter;
+  }
+}
+
+/**
+ * getFileBlob
  */
 
 export async function getFileBlob(url: string) {
   const response = await fetch(url);
 
   if ( !response.ok ) {
-    if ( response.status === 401 ) {
-      throw new Error('UNAUTHORIZED');
-    }
-    throw new Error('UNKNOWN_ERROR');
+    const retryAfter = parseInt(response.headers.get('Retry-After') || '') || undefined;
+    const message = response.status === 401 ? 'UNAUTHORIZED' : 'UNKNOWN_ERROR';
+    throw new HttpError(message, response.status, retryAfter);
   }
 
   const blob = await response.blob();
