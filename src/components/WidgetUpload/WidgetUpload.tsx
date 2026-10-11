@@ -3,19 +3,26 @@
 import { useEffect, useState } from 'react';
 import { Check, DownloadIcon, LoaderCircle } from 'lucide-react';
 
-import { getCldImageUrl } from 'next-cloudinary';
-import pLimit from 'p-limit';
 import { toast } from 'sonner';
 
-import { cn, formatBytes, getFileBlob, downloadUrl, addNumbers } from '@/lib/util';
+import { cn, formatBytes, downloadBlob, addNumbers, getUniqueFilename, HttpError } from '@/lib/util';
 import { readImage } from '@/lib/image';
 import { uploadFile } from '@/lib/cloudinary';
-import { ImageUpload } from '@/types/image';
+import { readQueue, uploadQueue, withRetry, fetchAssetBlob } from '@/lib/queue';
+import {
+  DEFAULT_TRANSFORMATION_SETTINGS,
+  TransformationSettings,
+  getTransformedUrl,
+  resolveFormat,
+} from '@/lib/transformations';
+import { ImageDownload, ImageUpload } from '@/types/image';
+import { CloudinaryResource } from '@/types/cloudinary';
 
 import Dropzone from '@/components/Dropzone';
 import ProgressBar from '@/components/ProgressBar';
 import Button from '@/components/Button';
 import Result from '@/components/Result';
+import TransformationControls from '@/components/TransformationControls';
 
 const MAX_IMAGES = 20;
 const MAX_SIZE = 10 * 1000000; // 10MB
@@ -27,6 +34,14 @@ const stateMap: { [key: string]: string } = {
   optimizing: 'Optimizing',
 }
 
+function getImageUrl(upload: CloudinaryResource, settings: TransformationSettings) {
+  return getTransformedUrl({
+    ...settings,
+    publicId: upload.public_id,
+    originalFormat: upload.format,
+  });
+}
+
 interface WidgetUploadProps {
   className?: string;
 }
@@ -34,10 +49,11 @@ interface WidgetUploadProps {
 const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const [images, setImages] = useState<Array<ImageUpload> | null>(null);
   const [archiveState, setArchiveState] = useState('ready');
+  const [settings, setSettings] = useState<TransformationSettings>(DEFAULT_TRANSFORMATION_SETTINGS);
 
   const imageStates = images?.map(({ state }) => state);
   const uploadingCount = imageStates?.filter(state => state === 'uploading').length || 0;
-  const optimizingCount = imageStates?.filter(state => state === 'optimizing').length || 0;
+  const optimizingCount = imageStates?.filter(state => ['uploaded', 'optimizing'].includes(state)).length || 0;
   const errorCount = imageStates?.filter(state => state === 'error').length || 0;
   const finishedCount = (imageStates?.filter(state => state === 'finished').length || 0) + errorCount;
   const totalCount = Array.isArray(images) ? images.length : 0;
@@ -46,7 +62,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   const isOptimizing = typeof optimizingCount === 'number' && optimizingCount > 0;
   const isUploadComplete = totalCount === finishedCount;
   const isDisabled = !!totalCount && totalCount >= MAX_IMAGES;
-  const isFinished = totalCount === finishedCount + errorCount;
+  const isFinished = totalCount === finishedCount;
 
   const hasDownloadsAvailable = typeof finishedCount === 'number' && finishedCount > 0;
 
@@ -80,246 +96,181 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
     uploadContainerClassName = 'grid md:grid-cols-2 gap-10';
   }
 
-  // Upload all of the images
-
-  useEffect(() => {
-    const filesToUpload = images?.filter(({ state }) => state === 'read' );
-    const ids = filesToUpload?.map(({ id }) => id);
-
-    if ( !Array.isArray(filesToUpload) || filesToUpload.length === 0 ) return;
-
-    setImages(prev => {
-      return [...(prev || [])].map(image => {
-        const nextImage = { ...image };
-        if ( ids?.includes(nextImage.id) ) {
-          nextImage.state = 'uploading';
-        }
-        return nextImage;
-      });
-    });
-
-    (async function run() {
-      const limitUploadFiles = pLimit(10);
-
-      const uploadsQueue = filesToUpload.map((upload: any) => {
-        return limitUploadFiles(() => {
-          async function startUpload() {
-            const imageToUpload = upload as ImageUpload;
-
-            let results;
-
-            try {
-              results = await uploadFile(imageToUpload.file);
-            } catch(e) {
-              let message: string | undefined;
-
-              if ( e instanceof Error ) {
-                if ( e.message === 'INAPPROPRIATE_CONTENT' ) {
-                  message = 'An image you uploaded appears to be inappropriate and not supported by imgto.xyz. If you think this is in error, please email community@cloudinary.com.';
-                } else if ( e.message.includes('minimum pixel resolution') ) {
-                  message = 'Images smaller than 80x80px are not supported.';
-                }
-              }
-
-              toast.error(message || 'Something went wrong, try again!');
-
-              setImages(prev => {
-                return [...(prev || [])].map(image => {
-                  const nextImage = { ...image };
-                  if ( image.id === imageToUpload.id ) {
-                    nextImage.state = 'error';
-
-                    if ( message ) {
-                      nextImage.errors = [message]
-                    }
-                  }
-                  return nextImage;
-                });
-              });
-              return;
-            }
-
-            setImages(prev => {
-              return [...(prev || [])].map(image => {
-                const nextImage = { ...image };
-                if ( image.id === imageToUpload.id ) {
-                  nextImage.state = 'optimizing';
-                  nextImage.upload = results;
-                }
-                return nextImage;
-              });
-            });
-
-            const optimizedUrl = getCldImageUrl({
-              src: results.public_id,
-              format: 'default',
-              quality: 'auto:low'
-            });
-
-            let optimizedData;
-
-            try {
-              optimizedData = await getFileBlob(optimizedUrl);
-            } catch(e) {
-              let message = 'Unknown Error';
-
-              if ( e instanceof Error ) {
-                if ( e.message === 'UNAUTHORIZED' ) {
-                  message = 'Someting went wrong. Try disabling any Ad Blockers and try again!';
-                }
-              }
-
-              toast.error(message);
-
-              setImages(prev => {
-                return [...(prev || [])].map(image => {
-                  const nextImage = { ...image };
-                  if ( image.id === imageToUpload.id ) {
-                    nextImage.state = 'error';
-                  }
-                  return nextImage;
-                });
-              });
-
-              return;
-            }
-
-            const optimizedSize = optimizedData.size;
-
-            const avifUrl = getCldImageUrl({
-              src: results.public_id,
-              format: 'avif',
-              quality: 'auto:low'
-            });
-
-            const webpUrl = getCldImageUrl({
-              src: results.public_id,
-              format: 'webp',
-              quality: 'auto:low'
-            });
-
-            const jpgUrl = getCldImageUrl({
-              src: results.public_id,
-              format: 'jpg',
-              quality: 'auto:low'
-            });
-
-            const jxlUrl = getCldImageUrl({
-              src: results.public_id,
-              format: 'jxl',
-              quality: 'auto:low'
-            });
-
-            const formats: Record<string, string | object> = {
-              optimized: {
-                url: optimizedUrl,
-                data: optimizedData,
-                size: optimizedSize
-              },
-              avif: {
-                url: avifUrl,
-              },
-              webp: {
-                url: webpUrl,
-              },
-              jpg: {
-                url: jpgUrl,
-              },
-              jxl: {
-                url: jxlUrl,
-              },
-            };
-
-            setImages(prev => {
-              return [...(prev || [])].map(image => {
-                const nextImage = { ...image };
-                if ( image.id === imageToUpload.id ) {
-                  nextImage.state = 'finished';
-                  Object.assign(nextImage, formats);
-                }
-                return nextImage;
-              });
-            });
-
-            return {
-              ...imageToUpload,
-              upload
-            }
-          }
-          return startUpload();
-        });
-      });
-
-      await Promise.all(uploadsQueue);
-    })();
-  }, [images]);
-
-  // Read in the images and grab the image data and sizes
+  // Read in the images and grab the image data and sizes. Reading is CPU bound
+  // (especially HEIC decoding) so it goes through the shared read queue
 
   useEffect(() => {
     const files = images?.filter(({ state }) => state === 'dropped');
-    const ids = files?.map(({ id }) => id);
 
     if ( !files || files.length === 0 ) return;
 
-    setImages(prev => {
-      return [...(prev || [])].map(image => {
-        const nextImage = { ...image };
-        if ( ids?.includes(nextImage.id) ) {
-          nextImage.state = 'reading';
-        }
-        return nextImage;
-      });
-    });
+    updateImages(files.map(({ id }) => id), { state: 'reading' });
 
     files.forEach(async (file) => {
-      const { img, data } = await readImage(file.file);
+      try {
+        const { img, data } = await readQueue(() => readImage(file.file));
 
-      const imageData = {
-        img,
-        data,
-        width: img.width,
-        height: img.height,
-        // Now that it's read, put it in an error state
-        // to update the UI
-        state: file.errors ? 'error' : 'read'
-      }
-
-      setImages(prev => {
-        return [...(prev || [])].map(image => {
-          let nextImage = { ...image };
-          if ( image.id === file.id ) {
-            nextImage = {
-              ...file,
-              ...imageData,
-            };
-          }
-          return nextImage;
+        updateImages([file.id], {
+          img,
+          data,
+          width: img.width,
+          height: img.height,
+          // Now that it's read, put it in an error state
+          // to update the UI
+          state: file.errors ? 'error' : 'read'
         });
+      } catch(e) {
+        updateImages([file.id], {
+          state: 'error',
+          errors: file.errors || ['Unable to read image.'],
+        });
+      }
+    });
+  }, [images]);
+
+  // Upload all of the images through the shared upload queue, retrying
+  // transient failures like rate limits with backoff
+
+  useEffect(() => {
+    const filesToUpload = images?.filter(({ state }) => state === 'read');
+
+    if ( !filesToUpload || filesToUpload.length === 0 ) return;
+
+    updateImages(filesToUpload.map(({ id }) => id), { state: 'uploading' });
+
+    filesToUpload.forEach(async (imageToUpload) => {
+      try {
+        const results = await uploadQueue(() => withRetry(() => uploadFile(imageToUpload.file)));
+        updateImages([imageToUpload.id], { state: 'uploaded', upload: results });
+      } catch(e) {
+        console.error('Failed to upload image', e);
+
+        let message: string | undefined;
+
+        if ( e instanceof Error ) {
+          if ( e.message === 'INAPPROPRIATE_CONTENT' ) {
+            message = 'An image you uploaded appears to be inappropriate and not supported by imgto.xyz. If you think this is in error, please email community@cloudinary.com.';
+          } else if ( e.message.includes('minimum pixel resolution') ) {
+            message = 'Images smaller than 80x80px are not supported.';
+          } else if ( e instanceof HttpError && [420, 429].includes(e.status) ) {
+            message = 'Too many images are being optimized right now, try again in a few minutes.';
+          }
+        }
+
+        toast.error(message || 'Something went wrong, try again!');
+
+        updateImages([imageToUpload.id], {
+          state: 'error',
+          ...(message && { errors: [message] }),
+        });
+      }
+    });
+  }, [images]);
+
+  // Optimize uploaded images with the current settings. Finished images whose
+  // delivered URL no longer matches the settings are re-optimized, which also
+  // catches settings that changed while an image was mid-optimization
+
+  useEffect(() => {
+    const imagesToOptimize = images?.filter(({ state, upload, optimized }) => {
+      if ( !upload ) return false;
+      if ( state === 'uploaded' ) return true;
+      return state === 'finished' && optimized?.url !== getImageUrl(upload, settings);
+    });
+
+    if ( !imagesToOptimize || imagesToOptimize.length === 0 ) return;
+
+    updateImages(imagesToOptimize.map(({ id }) => id), { state: 'optimizing' });
+
+    imagesToOptimize.forEach(async (image) => {
+      const upload = image.upload as CloudinaryResource;
+      const url = getImageUrl(upload, settings);
+
+      try {
+        const blob = await fetchAssetBlob(url);
+
+        updateImages([image.id], {
+          state: 'finished',
+          optimized: {
+            url,
+            format: resolveFormat(settings.format, upload.format),
+            size: blob.size,
+          }
+        });
+      } catch(e) {
+        console.error('Failed to optimize image', e);
+
+        let message = 'Something went wrong optimizing your image.';
+
+        if ( e instanceof Error && e.message === 'UNAUTHORIZED' ) {
+          message = 'Someting went wrong. Try disabling any Ad Blockers and try again!';
+        }
+
+        toast.error(message);
+
+        updateImages([image.id], { state: 'error', errors: [message] });
+      }
+    });
+  }, [images, settings]);
+
+  /**
+   * updateImages
+   */
+
+  function updateImages(ids: Array<string>, changes: Partial<ImageUpload>) {
+    setImages(prev => {
+      return [...(prev || [])].map(image => {
+        if ( !ids.includes(image.id) ) return image;
+        return { ...image, ...changes };
       });
     });
-  }, [images])
+  }
 
   /**
    * handleOnDownloadAll
+   * @description Zips in the browser using the blobs already fetched while
+   *   optimizing, so nothing is downloaded twice or proxied through the server
    */
 
   async function handleOnDownloadAll() {
-    if ( archiveState !== 'ready' ) return;
+    if ( archiveState !== 'ready' || !images ) return;
 
     setArchiveState('archiving');
 
-    const downloads = images?.filter(({ optimized }) => !!optimized).map(({ name, upload, optimized }) => {
-      return {
-        name,
-        format: upload?.format,
-        url: optimized?.url
-      }
-    });
+    try {
+      const { default: JSZip } = await import('jszip');
+      const zip = new JSZip();
+      const usedFilenames = new Set<string>();
 
-    await downloadUrl(`/api/archive?urls=${JSON.stringify(downloads)}`, 'imgtoxyz.zip');
+      // Names are assigned up front so duplicates are numbered in display order
 
-    setArchiveState('finished');
+      const downloads = images
+        .filter(({ state, optimized }) => state === 'finished' && !!optimized)
+        .map(({ name, upload, optimized }) => {
+          const download = optimized as ImageDownload;
+          const baseName = upload?.original_filename || name.replace(/\.[^.]+$/, '');
+          return {
+            url: download.url,
+            filename: getUniqueFilename(baseName, download.format, usedFilenames),
+          };
+        });
+
+      await Promise.all(downloads.map(async ({ url, filename }) => {
+        zip.file(filename, await fetchAssetBlob(url));
+      }));
+
+      // Images are already compressed, so skip deflating them again
+
+      const archive = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+
+      downloadBlob(archive, 'imgtoxyz.zip');
+
+      setArchiveState('finished');
+    } catch(e) {
+      toast.error('Failed to create zip, try again!');
+      setArchiveState('ready');
+      return;
+    }
 
     setTimeout(() => {
       setArchiveState('ready');
@@ -329,49 +280,56 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
   return (
     <div className={cn('', className)}>
       <div className={`${uploadContainerClassName} mb-20`}>
-        <Dropzone
-          className="min-h-0 self-start"
+        <div className="grid gap-8 self-start">
+          <Dropzone
+            className="min-h-0"
 
-          accept={{
-            'image/avif': ['.avif'],
-            'image/jpeg': ['.jpg', '.jpeg'],
-            'image/png': ['.png'],
-            'image/webp': ['.webp'],
-            'image/jxl': ['.jxl'],
-            'image/heif': ['.heic', '.heif'],
-            'image/heic': ['.heic'],
-          }}
-          onDrop={(droppedFile) => {
-            const dropDate = Date.now();
+            accept={{
+              'image/avif': ['.avif'],
+              'image/jpeg': ['.jpg', '.jpeg'],
+              'image/png': ['.png'],
+              'image/webp': ['.webp'],
+              'image/jxl': ['.jxl'],
+              'image/heif': ['.heic', '.heif'],
+              'image/heic': ['.heic'],
+            }}
+            onDrop={(droppedFile) => {
+              const dropDate = Date.now();
 
-            const upload: ImageUpload = {
-              id: `${dropDate}-${droppedFile.name}`,
-              name: droppedFile.name,
-              size: droppedFile.size,
-              file: droppedFile.file,
+              const upload: ImageUpload = {
+                id: `${dropDate}-${droppedFile.name}`,
+                name: droppedFile.name,
+                size: droppedFile.size,
+                file: droppedFile.file,
               
-              // Don't yet put it in an error state so that we can allow the image
-              // to be read into the document
+                // Don't yet put it in an error state so that we can allow the image
+                // to be read into the document
 
-              state: 'dropped',
-            };
+                state: 'dropped',
+              };
 
-            if ( droppedFile.errors ) {
-              upload.errors = droppedFile.errors;
-            }
+              if ( droppedFile.errors ) {
+                upload.errors = droppedFile.errors;
+              }
 
-            setImages(prev => {
-              const nextImages = [
-                ...(prev || []),
-                upload
-              ];
-              return nextImages;
-            });
-          }}
-          disabled={isDisabled}
-          maxSize={MAX_SIZE}
-          maxFiles={MAX_IMAGES}
-        />
+              setImages(prev => {
+                const nextImages = [
+                  ...(prev || []),
+                  upload
+                ];
+                return nextImages;
+              });
+            }}
+            disabled={isDisabled}
+            maxSize={MAX_SIZE}
+            maxFiles={MAX_IMAGES}
+          />
+
+          <TransformationControls
+            settings={settings}
+            onChange={setSettings}
+          />
+        </div>
 
         {Array.isArray(images) && (
           <section>
@@ -467,7 +425,7 @@ const WidgetUpload = ({ className }: WidgetUploadProps) => {
             {images.map((image) => {
               return (
                 <li key={image.id} id={image.id} >
-                  <Result image={image} />
+                  <Result image={image} settings={settings} />
                 </li>
               )
             })}

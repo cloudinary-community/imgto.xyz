@@ -2,33 +2,60 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { LoaderCircle, DownloadIcon, ArrowRight, ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { downloadUrl, formatBytes } from '@/lib/util';
+import { downloadBlob, formatBytes } from '@/lib/util';
 import { getImageFormatFromType } from '@/lib/image';
-import { ImageDownload, ImageUpload } from '@/types/image';
+import { fetchAssetBlob } from '@/lib/queue';
+import { OUTPUT_FORMAT_IDS, TransformationSettings, getTransformedUrl } from '@/lib/transformations';
+import { ImageUpload } from '@/types/image';
 
 import Button from '@/components/Button';
 import DownloadButton from '@/components/DownloadButton';
 
-const DOWNLOAD_FORMATS = ['avif', 'webp', 'jpg', 'jxl'];
-
 interface DownloadProps {
   image: ImageUpload;
+  settings: TransformationSettings;
 }
 
-const Result = ({ image }: DownloadProps) => {
+const Result = ({ image, settings }: DownloadProps) => {
   const asButtonContainerRef = useRef<HTMLDivElement | null>(null);
   const [asDropdownOpen, setAsDropdownOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadName = image.upload?.original_filename;
   const formatFormatted = getImageFormatFromType(image.file.type, true);
 
   const hasError = image.state === 'error' || image.errors;
 
-  async function downloadFile(url: string, format: string) {
-    if ( typeof image?.optimized?.url !== 'string' ) return;
-    await downloadUrl(url, `${downloadName}.${format}`);
+  async function handleOnDownload() {
+    if ( !image.optimized || isDownloading ) return;
+
+    setIsDownloading(true);
+
+    try {
+      const blob = await fetchAssetBlob(image.optimized.url);
+      downloadBlob(blob, `${downloadName}.${image.optimized.format}`);
+    } catch(e) {
+      toast.error('Failed to download image, try again!');
+    }
+
+    setIsDownloading(false);
   }
+
+  // Alternate formats use the same quality and progressive settings
+
+  const alternateDownloads = image.upload ? OUTPUT_FORMAT_IDS
+    .filter(format => format !== image.optimized?.format)
+    .map(format => ({
+      format,
+      url: getTransformedUrl({
+        ...settings,
+        format,
+        publicId: image.upload!.public_id,
+        originalFormat: image.upload!.format,
+      })
+    })) : [];
 
   function handleDocumentOnClick(event: MouseEvent) {
     if ( asButtonContainerRef.current && !event.composedPath().includes(asButtonContainerRef.current) ) {
@@ -97,13 +124,12 @@ const Result = ({ image }: DownloadProps) => {
               <div className="flex gap-2 sm:gap-4 flex-col xs:flex-row">
                 <Button
                   className="relative z-0"
-                  onClick={async () => {
-                    if ( !image?.optimized?.url || !image.upload?.format ) return;
-                    await downloadFile(image.optimized.url, image.upload.format);
-                  }}
+                  onClick={handleOnDownload}
                 >
-                  <DownloadIcon className="w-5 h-5 text-white" />
-                  Download
+                  { isDownloading
+                    ? <LoaderCircle className="w-5 h-5 text-white animate-spin" />
+                    : <DownloadIcon className="w-5 h-5 text-white" /> }
+                  Download{ image.optimized?.format && ` .${image.optimized.format}` }
                 </Button>
 
                 <div ref={asButtonContainerRef} className="flex items-center relative">
@@ -117,18 +143,14 @@ const Result = ({ image }: DownloadProps) => {
                   </Button>
                   {asDropdownOpen && (
                     <ul className="absolute top-[calc(100%_+_.5em)] left-0 z-10 min-w-full text-left whitespace-nowrap bg-white shadow-lg rounded px-2 py-2">
-                      {DOWNLOAD_FORMATS
-                        .filter(format => image?.[format as keyof ImageUpload])
-                        .filter(format => format !== image.upload?.format)
-                        .map(format => {
-                          const download = image[format as keyof ImageUpload] as ImageDownload;
+                      {alternateDownloads.map(({ format, url }) => {
                           return (
                             <li key={format} className="font-semibold mb-1">
                               <DownloadButton
                                 className="text-zinc-800 hover:text-zinc-500 px-2 py-1"
-                                url={download?.url || ''}
+                                url={url}
                                 filename={`${downloadName}.${format}`}
-                                title={`Dowload as .${ format }`}
+                                title={`Download as .${ format }`}
                                 preload
                                 showSize
                               >
@@ -144,7 +166,7 @@ const Result = ({ image }: DownloadProps) => {
             </>
           )}
 
-          {!hasError && ['dropped', 'reading', 'read', 'uploading', 'optimizing'].includes(image.state) && (
+          {!hasError && ['dropped', 'reading', 'read', 'uploading', 'uploaded', 'optimizing'].includes(image.state) && (
             <div className="flex gap-4">
               <Button disabled>
                 <LoaderCircle className="w-5 h-5 text-white animate-spin" />
