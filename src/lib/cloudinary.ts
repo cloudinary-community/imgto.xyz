@@ -5,7 +5,9 @@ import { HttpError } from '@/lib/util';
  */
 
 export async function uploadFile(file: File) {
-  const timestamp = Date.now();
+  // Cloudinary expects a Unix timestamp in seconds
+
+  const timestamp = Math.round(Date.now() / 1000);
 
   const formData = new FormData();
 
@@ -13,7 +15,10 @@ export async function uploadFile(file: File) {
     upload_preset: 'imgtoxyz'
   };
 
-  if ( typeof process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER === 'string' ) {
+  // An empty folder is treated as unset so the client and /api/sign agree on
+  // exactly which parameters get signed
+
+  if ( process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER ) {
     parameters.folder = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER;
   }
 
