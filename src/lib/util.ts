@@ -100,17 +100,32 @@ export function formatBytes(bytes: number, { type = 'kb', limit, fixed = 0, comm
 }
 
 /**
- * getFileSize
+ * HttpError
+ */
+
+export class HttpError extends Error {
+  status: number;
+  retryAfter?: number;
+
+  constructor(message: string, status: number, retryAfter?: number) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+    this.retryAfter = retryAfter;
+  }
+}
+
+/**
+ * getFileBlob
  */
 
 export async function getFileBlob(url: string) {
   const response = await fetch(url);
 
   if ( !response.ok ) {
-    if ( response.status === 401 ) {
-      throw new Error('UNAUTHORIZED');
-    }
-    throw new Error('UNKNOWN_ERROR');
+    const retryAfter = parseInt(response.headers.get('Retry-After') || '') || undefined;
+    const message = response.status === 401 ? 'UNAUTHORIZED' : 'UNKNOWN_ERROR';
+    throw new HttpError(message, response.status, retryAfter);
   }
 
   const blob = await response.blob();
@@ -119,36 +134,54 @@ export async function getFileBlob(url: string) {
 }
 
 /**
+ * downloadBlob
+ */
+
+export function downloadBlob(blob: Blob, filename: string = 'file') {
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  a.href = blobUrl;
+  a.download = filename;
+  a.style.display = 'none';
+
+  // Some browsers (Firefox) require the link to be in the document to download
+
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  // Give the browser a moment to start the download before releasing the blob
+
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+}
+
+/**
  * downloadUrl
  */
 
-interface DownloadUrlOptions {
-  downloadBlob?: boolean;
+export async function downloadUrl(url: string, filename: string = 'file') {
+  const blob = await getFileBlob(url);
+  downloadBlob(blob, filename);
 }
 
-export async function downloadUrl(url: string, filename: string = 'file', options?: DownloadUrlOptions) {
-  const { downloadBlob = false } = options || {};
-  let downloadUrl = url;
+/**
+ * getUniqueFilename
+ * @description Appends a counter to avoid collisions, ex: photo.jpg, photo-1.jpg
+ */
 
-  if ( downloadBlob ) {
-    const blob = await getFileBlob(url);
-    const blobUrl = URL.createObjectURL(blob);
-    downloadUrl = blobUrl;
+export function getUniqueFilename(name: string, extension: string, used: Set<string>) {
+  let filename = `${name}.${extension}`;
+  let counter = 1;
+
+  while ( used.has(filename.toLowerCase()) ) {
+    filename = `${name}-${counter}.${extension}`;
+    counter++;
   }
 
-  const a = document.createElement('a');
+  used.add(filename.toLowerCase());
 
-  a.href = downloadUrl;
-  a.download = filename;
-
-  function handleOnClick() {
-    setTimeout(() => URL.revokeObjectURL(downloadUrl), 150);
-    removeEventListener('click', handleOnClick);
-  };
-
-  a.addEventListener('click', handleOnClick, false);
-
-  a.click();
+  return filename;
 }
 
 /**

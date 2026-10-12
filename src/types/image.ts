@@ -10,18 +10,13 @@ export interface ImageUpload {
   state: string;
   upload?: CloudinaryResource;
   optimized?: ImageDownload;
-  avif?: ImageDownload;
-  webp?: ImageDownload;
-  heic?: ImageDownload;
-  jpeg?: ImageDownload;
-  jxl?: ImageDownload;
   width?: number;
   height?: number;
   errors?: boolean | string | Array<string>;
 }
 
 export interface ImageDownload {
-  url?: string;
+  url: string;
+  format: string;
   size?: number;
-  data?: Blob;
 }

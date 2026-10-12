@@ -31,6 +31,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Establish connection with Cloudinary before requests. Optimized assets
+            are fetched with CORS while page images aren't, which use separate
+            connections, so warm up both */}
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+      </head>
       <body className={inter.className}>
         <div id="root">
           <Nav />

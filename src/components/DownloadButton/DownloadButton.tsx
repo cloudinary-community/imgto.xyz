@@ -2,8 +2,10 @@
 
 import { Download, LoaderCircle } from 'lucide-react';
 import { MouseEvent, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-import { cn, downloadUrl, formatBytes } from '@/lib/util';
+import { cn, downloadBlob, formatBytes } from '@/lib/util';
+import { fetchAssetBlob } from '@/lib/queue';
 
 interface DownloadButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   filename?: string;
@@ -17,29 +19,40 @@ const DownloadButton = ({ children, url, filename = 'file', onClick, className, 
   const [isLoading, setIsLoading] = useState(false);
   const [size, setSize] = useState<number | undefined>();
 
+  // Preloading warms the shared cache so the click downloads instantly
+
   useEffect(() => {
-    if ( preload ) {
-      (async function run() {
-        setIsLoading(true);
+    if ( !preload ) return;
 
-        const image = await fetch(url);
+    let isCurrent = true;
 
-        if ( showSize ) {
-          const blob = await image.blob();
-          setSize(blob.size);
-        }
+    setIsLoading(true);
+    setSize(undefined);
 
-        setIsLoading(false);
-      })();
+    fetchAssetBlob(url)
+      .then(blob => {
+        if ( isCurrent && showSize ) setSize(blob.size);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if ( isCurrent ) setIsLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
     }
-  }, [preload])
+  }, [preload, url, showSize]);
 
   async function handleOnClick(event: MouseEvent<HTMLButtonElement>) {
     if ( isLoading ) return;
 
     setIsLoading(true);
-    
-    await downloadUrl(url, filename, { downloadBlob: true });
+
+    try {
+      downloadBlob(await fetchAssetBlob(url), filename);
+    } catch(e) {
+      toast.error('Failed to download image, try again!');
+    }
 
     setIsLoading(false);
 

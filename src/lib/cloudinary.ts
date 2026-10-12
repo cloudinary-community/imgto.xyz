@@ -1,10 +1,13 @@
+import { HttpError } from '@/lib/util';
 
 /**
  * uploadFile
  */
 
 export async function uploadFile(file: File) {
-  const timestamp = Date.now();
+  // Cloudinary expects a Unix timestamp in seconds
+
+  const timestamp = Math.round(Date.now() / 1000);
 
   const formData = new FormData();
 
@@ -12,7 +15,10 @@ export async function uploadFile(file: File) {
     upload_preset: 'imgtoxyz'
   };
 
-  if ( typeof process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER === 'string' ) {
+  // An empty folder is treated as unset so the client and /api/sign agree on
+  // exactly which parameters get signed
+
+  if ( process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER ) {
     parameters.folder = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOADS_FOLDER;
   }
 
@@ -21,13 +27,22 @@ export async function uploadFile(file: File) {
     formData.append(key, String(parameters[key]));
   });
 
-  const { signature } = await fetch('/api/sign', {
+  const signResponse = await fetch('/api/sign', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({
       ...parameters,
       timestamp
     })
-  }).then(r => r.json());
+  });
+
+  if ( !signResponse.ok ) {
+    throw new HttpError('Failed to sign upload', signResponse.status);
+  }
+
+  const { signature } = await signResponse.json();
 
   formData.append('file', file);
   formData.append('api_key', String(process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY));
@@ -40,8 +55,9 @@ export async function uploadFile(file: File) {
   });
 
   if ( !response.ok ) {
-    const { error } = await response.json();
-    throw new Error(error.message || 'Uknown error');
+    const { error } = await response.json().catch(() => ({ error: undefined }));
+    const retryAfter = parseInt(response.headers.get('Retry-After') || '') || undefined;
+    throw new HttpError(error?.message || 'Unknown error', response.status, retryAfter);
   }
   
   const results = await response.json();
